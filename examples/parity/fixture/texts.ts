@@ -31,3 +31,8 @@ export const registration = {
   email: "Email address", continue: "Continue", safe: "We never share your address.",
   theme: "Theme", mode: "Appearance", language: "Language", // the frontend's English labels of these selects
 };
+/* Overlay states (review R4-C on #5): an open popover and a visible toast. */
+export const overlays = {
+  lead: "Items are sorted by the date they were last changed.", sort: "Sort", sortMenu: "Sort items",
+  sortLabel: "Sort by", options: ["Last changed", "Name", "Size"], toast: "Settings saved.",
+};

@@ -3,11 +3,13 @@
 //   examples/parity/fixture/console-sys.tsx      the built Console package (candidate)
 //   examples/parity/front-baseline/front-sys.tsx  the WakoLab frontend's own modules at e492bec (baseline,
 //                                                 built only from a separate read-only checkout)
-// ?screen=form|components|confirm|registration  &mode=light|dark. Original code.
+// ?screen=form|components|confirm|registration|overlays  &mode=light|dark. Original code.
+// overlays: the capture script opens the popover by clicking #fx-pop (same action on both sides);
+// the toast is shown from the first render with a timeout far longer than any capture.
 import { createRoot } from "react-dom/client";
 import { useState, type ReactNode } from "react";
 import * as Sys from "parity-sys";
-import { components as C, form as F, registration as R } from "./texts";
+import { components as C, form as F, overlays as O, registration as R } from "./texts";
 
 const params = new URLSearchParams(location.search);
 const screen = params.get("screen") ?? "form";
@@ -112,5 +114,31 @@ function RegistrationScreen() {
     </Sys.Registration>
   );
 }
-const screens: Record<string, () => ReactNode> = { form: () => <FormScreen />, components: () => <ComponentsScreen />, confirm: () => <ConfirmScreen />, registration: () => <RegistrationScreen /> };
+function OverlaysScreen() {
+  return (
+    <div className="wl-home wl-console">
+      <main className="wl-page" style={{ display: "grid", gap: 16, alignContent: "start" }}>
+        <p className="wl-lead">{O.lead}</p>
+        <div style={row}>
+          <Sys.Popover label={O.sortMenu} align="start" trigger={(p) => (
+            <button {...p} ref={p.ref as React.Ref<HTMLButtonElement>} id="fx-pop" type="button" className="wl-tool"><Sys.Icon name="list" size={18} />{O.sort}</button>
+          )}>
+            {(close) => (
+              <div className="grid gap-1">
+                <p className="wl-label">{O.sortLabel}</p>
+                {O.options.map((o, i) => (
+                  <button key={o} type="button" className="wl-option" aria-pressed={i === 0} onClick={close}>
+                    {i === 0 ? <Sys.Icon name="check" size={18} /> : <span style={{ width: 18 }} />}{o}
+                  </button>
+                ))}
+              </div>
+            )}
+          </Sys.Popover>
+        </div>
+      </main>
+      <Sys.Toast message={O.toast} onDone={() => {}} timeout={600000} />
+    </div>
+  );
+}
+const screens: Record<string, () => ReactNode> = { form: () => <FormScreen />, components: () => <ComponentsScreen />, confirm: () => <ConfirmScreen />, registration: () => <RegistrationScreen />, overlays: () => <OverlaysScreen /> };
 createRoot(document.getElementById("app")!).render(<Sys.Root mode={mode}>{(screens[screen] ?? screens.form)()}</Sys.Root>);

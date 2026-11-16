@@ -8,7 +8,7 @@
 //    frontend's review prototype, served from a read-only checkout
 //    (`npm ci && npm run prototype -- --port 5174`, or a static build of vite.prototype.config.ts);
 //    candidate: examples/parity (texts in examples/parity/fixtures.ts);
-//  - fixture screens (form, components, confirm, registration): one fixture
+//  - fixture screens (form, components, confirm, registration, overlays): one fixture
 //    (examples/parity/fixture) rendered twice, with the frontend's own modules (baseline, built by
 //    examples/parity/front-baseline/vite.config.mjs from the checkout and served on :5175) and with
 //    the built package (candidate, examples/parity/fixture/console-sys.tsx).
@@ -61,6 +61,8 @@ const SCREENS = {
   components: { fixture: true },
   confirm: { fixture: true },
   registration: { fixture: true },
+  // Review R4-C on #5: an open popover and a visible toast on one screen.
+  overlays: { fixture: true, after: () => document.getElementById("fx-pop").click() },
 };
 
 function readIcons(file) {
@@ -170,9 +172,12 @@ for (const [screen, spec] of Object.entries(SCREENS)) {
     const dir = join(OUT, name); mkdirSync(dir, { recursive: true });
     const u = urls(screen, spec, mode);
     const candInit = icons ? { fn: (set) => { window.__CONSOLE_ICONS__ = set; }, arg: icons } : null;
-    const after = spec.openDialog ? () => { const d = document.querySelector("dialog.wl-dialog"); d.showModal(); d.querySelector("[data-autofocus]")?.focus(); } : null;
+    const after = spec.openDialog ? () => { const d = document.querySelector("dialog.wl-dialog"); d.showModal(); d.querySelector("[data-autofocus]")?.focus(); } : spec.after ?? null;
     const base = await capture(browserA, { url: u.baseline, mode, width, init: u.baselineInit, after });
-    const cand = await capture(browserA, { url: u.candidate, mode, width, init: candInit });
+    // spec.after (an interaction such as opening a popover) applies to both sides; the prototype
+    // dialog is opened by script on the baseline only, since the candidate renders it open.
+    const candAfter = spec.openDialog ? null : spec.after ?? null;
+    const cand = await capture(browserA, { url: u.candidate, mode, width, init: candInit, after: candAfter });
     const r = await compare(base.png, cand.png, { evidence: true, masks: [...base.iconRects, ...cand.iconRects] });
     for (const [file, data] of [["baseline.png", base.png], ["candidate.png", cand.png], ["diff.png", Buffer.from(r.diff, "base64")], ["side-by-side.png", Buffer.from(r.side, "base64")]]) writeFileSync(join(dir, file), data);
     r.crops.forEach((c, i) => writeFileSync(join(OUT, "evidence", `${name}-cluster${i + 1}.png`), Buffer.from(c.png, "base64")));
@@ -182,7 +187,7 @@ for (const [screen, spec] of Object.entries(SCREENS)) {
     const row = { screen, mode, width, source: spec.fixture ? "fixture" : "prototype", baselineSize: r.sizeA, candidateSize: r.sizeB, differentExact: r.exact, differentOver16: r.over16, maxChannelDelta: r.maxDelta, clusters: r.clusters };
     if (browserB) {
       const base2 = await capture(browserB, { url: u.baseline, mode, width, init: u.baselineInit, after });
-      const cand2 = await capture(browserB, { url: u.candidate, mode, width, init: candInit });
+      const cand2 = await capture(browserB, { url: u.candidate, mode, width, init: candInit, after: candAfter });
       const bb = await compare(base.png, base2.png), cc = await compare(cand.png, cand2.png), bc2 = await compare(base2.png, cand2.png);
       Object.assign(row, { controlBaseline: bb.exact, controlCandidate: cc.exact, secondLaunch: bc2.exact, secondLaunchMaxDelta: bc2.maxDelta });
     }

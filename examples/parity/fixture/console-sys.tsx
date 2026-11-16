@@ -9,7 +9,7 @@ import { ConsoleRoot, FormPage as ConsoleFormPage, RegistrationFrame, Select, St
 import type { registration } from "./texts";
 export {
   Alert, Badge, Button, Card, Checkbox, ChoiceGroup, CodeField, ConfirmDialog, ConnectionRow, EmptyState, Icon, IconButton,
-  SearchField, Select, Skeleton, Stepper, TabPanel, Tabs, TextField, ToggleChip,
+  Popover, SearchField, Select, Skeleton, Stepper, TabPanel, Tabs, TextField, Toast, ToggleChip,
 } from "wakolab-design-systems-console";
 
 export function Root({ mode, children }: { mode: "light" | "dark"; children: ReactNode }) {

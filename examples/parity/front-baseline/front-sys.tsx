@@ -13,7 +13,7 @@ import { ThemeProvider } from "@front/theme/ThemeProvider";
 import { RegistrationShell } from "@front/features/RegistrationShell";
 export {
   Alert, Badge, Button, Card, Checkbox, ChoiceGroup, CodeField, ConfirmDialog, ConnectionRow, EmptyState, Icon, IconButton,
-  SearchField, Select, Skeleton, Stepper, TabPanel, Tabs, TextField, ToggleChip,
+  Popover, SearchField, Select, Skeleton, Stepper, TabPanel, Tabs, TextField, Toast, ToggleChip,
 } from "@front/components/ui";
 
 export function Root({ children }: { mode: "light" | "dark"; children: ReactNode }) {
