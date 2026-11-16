@@ -1,0 +1,171 @@
+{
+ "case": "message-dark-360",
+ "exact": 8,
+ "maxChannelDelta": 1,
+ "clusters": [
+  {
+   "box": [
+    16,
+    65,
+    17,
+    67
+   ],
+   "count": 4,
+   "maxDelta": 1
+  },
+  {
+   "box": [
+    16,
+    104,
+    17,
+    106
+   ],
+   "count": 4,
+   "maxDelta": 1
+  }
+ ],
+ "crops": [
+  {
+   "file": "docs/parity/run-2/evidence/message-dark-360-cluster1.png",
+   "region": [
+    10,
+    59,
+    24,
+    74
+   ],
+   "maskedIconAreas": []
+  },
+  {
+   "file": "docs/parity/run-2/evidence/message-dark-360-cluster2.png",
+   "region": [
+    10,
+    98,
+    24,
+    113
+   ],
+   "maskedIconAreas": []
+  }
+ ],
+ "pixels": [
+  {
+   "x": 16,
+   "y": 65,
+   "delta": 1,
+   "baseline": [
+    29,
+    31,
+    29
+   ],
+   "candidate": [
+    29,
+    31,
+    28
+   ]
+  },
+  {
+   "x": 16,
+   "y": 66,
+   "delta": 1,
+   "baseline": [
+    73,
+    77,
+    71
+   ],
+   "candidate": [
+    73,
+    76,
+    71
+   ]
+  },
+  {
+   "x": 17,
+   "y": 66,
+   "delta": 1,
+   "baseline": [
+    76,
+    81,
+    74
+   ],
+   "candidate": [
+    76,
+    81,
+    75
+   ]
+  },
+  {
+   "x": 17,
+   "y": 67,
+   "delta": 1,
+   "baseline": [
+    41,
+    45,
+    40
+   ],
+   "candidate": [
+    41,
+    45,
+    41
+   ]
+  },
+  {
+   "x": 17,
+   "y": 104,
+   "delta": 1,
+   "baseline": [
+    41,
+    45,
+    40
+   ],
+   "candidate": [
+    41,
+    45,
+    41
+   ]
+  },
+  {
+   "x": 16,
+   "y": 105,
+   "delta": 1,
+   "baseline": [
+    73,
+    77,
+    71
+   ],
+   "candidate": [
+    72,
+    77,
+    71
+   ]
+  },
+  {
+   "x": 17,
+   "y": 105,
+   "delta": 1,
+   "baseline": [
+    76,
+    81,
+    74
+   ],
+   "candidate": [
+    76,
+    81,
+    75
+   ]
+  },
+  {
+   "x": 16,
+   "y": 106,
+   "delta": 1,
+   "baseline": [
+    29,
+    31,
+    29
+   ],
+   "candidate": [
+    29,
+    31,
+    28
+   ]
+  }
+ ]
+}

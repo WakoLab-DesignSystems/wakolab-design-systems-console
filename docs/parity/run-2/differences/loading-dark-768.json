@@ -1,0 +1,171 @@
+{
+ "case": "loading-dark-768",
+ "exact": 8,
+ "maxChannelDelta": 1,
+ "clusters": [
+  {
+   "box": [
+    16,
+    139,
+    17,
+    141
+   ],
+   "count": 4,
+   "maxDelta": 1
+  },
+  {
+   "box": [
+    16,
+    178,
+    17,
+    180
+   ],
+   "count": 4,
+   "maxDelta": 1
+  }
+ ],
+ "crops": [
+  {
+   "file": "docs/parity/run-2/evidence/loading-dark-768-cluster1.png",
+   "region": [
+    10,
+    133,
+    24,
+    148
+   ],
+   "maskedIconAreas": []
+  },
+  {
+   "file": "docs/parity/run-2/evidence/loading-dark-768-cluster2.png",
+   "region": [
+    10,
+    172,
+    24,
+    187
+   ],
+   "maskedIconAreas": []
+  }
+ ],
+ "pixels": [
+  {
+   "x": 16,
+   "y": 139,
+   "delta": 1,
+   "baseline": [
+    29,
+    31,
+    29
+   ],
+   "candidate": [
+    29,
+    31,
+    28
+   ]
+  },
+  {
+   "x": 16,
+   "y": 140,
+   "delta": 1,
+   "baseline": [
+    73,
+    77,
+    71
+   ],
+   "candidate": [
+    73,
+    76,
+    71
+   ]
+  },
+  {
+   "x": 17,
+   "y": 140,
+   "delta": 1,
+   "baseline": [
+    76,
+    81,
+    74
+   ],
+   "candidate": [
+    76,
+    81,
+    75
+   ]
+  },
+  {
+   "x": 17,
+   "y": 141,
+   "delta": 1,
+   "baseline": [
+    41,
+    45,
+    40
+   ],
+   "candidate": [
+    41,
+    45,
+    41
+   ]
+  },
+  {
+   "x": 17,
+   "y": 178,
+   "delta": 1,
+   "baseline": [
+    41,
+    45,
+    40
+   ],
+   "candidate": [
+    41,
+    45,
+    41
+   ]
+  },
+  {
+   "x": 16,
+   "y": 179,
+   "delta": 1,
+   "baseline": [
+    73,
+    77,
+    71
+   ],
+   "candidate": [
+    72,
+    77,
+    71
+   ]
+  },
+  {
+   "x": 17,
+   "y": 179,
+   "delta": 1,
+   "baseline": [
+    76,
+    81,
+    74
+   ],
+   "candidate": [
+    76,
+    81,
+    75
+   ]
+  },
+  {
+   "x": 16,
+   "y": 180,
+   "delta": 1,
+   "baseline": [
+    29,
+    31,
+    29
+   ],
+   "candidate": [
+    29,
+    31,
+    28
+   ]
+  }
+ ]
+}

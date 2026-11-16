@@ -1,0 +1,201 @@
+{
+ "case": "unavailable-dark-1440",
+ "exact": 10,
+ "maxChannelDelta": 5,
+ "clusters": [
+  {
+   "box": [
+    1049,
+    20,
+    1050,
+    23
+   ],
+   "count": 5,
+   "maxDelta": 3
+  },
+  {
+   "box": [
+    1068,
+    20,
+    1069,
+    23
+   ],
+   "count": 5,
+   "maxDelta": 5
+  }
+ ],
+ "crops": [
+  {
+   "file": "docs/parity/run-2/evidence/unavailable-dark-1440-cluster1.png",
+   "region": [
+    1043,
+    14,
+    1057,
+    30
+   ],
+   "maskedIconAreas": []
+  },
+  {
+   "file": "docs/parity/run-2/evidence/unavailable-dark-1440-cluster2.png",
+   "region": [
+    1062,
+    14,
+    1076,
+    30
+   ],
+   "maskedIconAreas": []
+  }
+ ],
+ "pixels": [
+  {
+   "x": 1049,
+   "y": 20,
+   "delta": 3,
+   "baseline": [
+    30,
+    33,
+    29
+   ],
+   "candidate": [
+    32,
+    35,
+    32
+   ]
+  },
+  {
+   "x": 1050,
+   "y": 20,
+   "delta": 3,
+   "baseline": [
+    105,
+    110,
+    102
+   ],
+   "candidate": [
+    107,
+    113,
+    105
+   ]
+  },
+  {
+   "x": 1068,
+   "y": 20,
+   "delta": 2,
+   "baseline": [
+    104,
+    110,
+    102
+   ],
+   "candidate": [
+    106,
+    111,
+    104
+   ]
+  },
+  {
+   "x": 1069,
+   "y": 20,
+   "delta": 3,
+   "baseline": [
+    29,
+    32,
+    29
+   ],
+   "candidate": [
+    32,
+    35,
+    31
+   ]
+  },
+  {
+   "x": 1049,
+   "y": 21,
+   "delta": 3,
+   "baseline": [
+    88,
+    92,
+    86
+   ],
+   "candidate": [
+    85,
+    89,
+    83
+   ]
+  },
+  {
+   "x": 1069,
+   "y": 21,
+   "delta": 2,
+   "baseline": [
+    86,
+    90,
+    84
+   ],
+   "candidate": [
+    84,
+    88,
+    82
+   ]
+  },
+  {
+   "x": 1049,
+   "y": 22,
+   "delta": 3,
+   "baseline": [
+    109,
+    115,
+    107
+   ],
+   "candidate": [
+    112,
+    118,
+    109
+   ]
+  },
+  {
+   "x": 1069,
+   "y": 22,
+   "delta": 5,
+   "baseline": [
+    107,
+    113,
+    105
+   ],
+   "candidate": [
+    112,
+    118,
+    109
+   ]
+  },
+  {
+   "x": 1049,
+   "y": 23,
+   "delta": 1,
+   "baseline": [
+    126,
+    131,
+    123
+   ],
+   "candidate": [
+    126,
+    132,
+    123
+   ]
+  },
+  {
+   "x": 1069,
+   "y": 23,
+   "delta": 1,
+   "baseline": [
+    125,
+    130,
+    122
+   ],
+   "candidate": [
+    126,
+    131,
+    123
+   ]
+  }
+ ]
+}

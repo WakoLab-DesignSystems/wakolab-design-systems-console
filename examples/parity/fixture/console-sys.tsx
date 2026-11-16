@@ -5,7 +5,7 @@
 import "wakolab-design-systems-console/console.css";
 import "./fixture.css";
 import type { ReactNode } from "react";
-import { ConsoleRoot, FormPage as ConsoleFormPage, RegistrationFrame, Select, Stepper, type IconSet } from "wakolab-design-systems-console";
+import { ConsoleRoot, FormPage as ConsoleFormPage, RegistrationFrame, Select, Stepper, useConsole, type IconSet } from "wakolab-design-systems-console";
 import type { registration } from "./texts";
 export {
   Alert, Badge, Button, Card, Checkbox, ChoiceGroup, CodeField, ConfirmDialog, ConnectionRow, EmptyState, Icon, IconButton,
@@ -20,13 +20,15 @@ export function FormPage({ title, lead, children }: { title: ReactNode; lead: Re
   return <ConsoleFormPage title={title} lead={lead}>{children}</ConsoleFormPage>;
 }
 export function Registration({ texts: t, children }: { texts: typeof registration; children: ReactNode }) {
+  // The frontend's appearance select shows the current mode; so does this slot content.
+  const { resolvedMode } = useConsole();
   return (
     <RegistrationFrame screen="email"
       brand={<a href="/" className="inline-flex items-center gap-3 font-bold text-xl no-underline"><span aria-hidden="true" className="grid place-content-center size-10 rounded-control bg-brand text-on-brand">W</span>WakoLab</a>}
       tools={<>
         <div className="appearance-controls flex flex-wrap gap-3">
           <Select id="theme" label={t.theme} defaultValue="console"><option value="console">Console</option><option value="folio">Folio</option><option value="marquee">Marquee</option></Select>
-          <Select id="appearance-mode" label={t.mode} defaultValue="light"><option value="light">Light</option><option value="dark">Dark</option><option value="system">System</option></Select>
+          <Select id="appearance-mode" label={t.mode} value={resolvedMode} onChange={() => {}}><option value="light">Light</option><option value="dark">Dark</option><option value="system">System</option></Select>
         </div>
         <Select id="language" label={t.language} defaultValue="en"><option value="en">English</option><option value="fr">Français</option><option value="es">Español</option><option value="zh-Hans">简体中文</option><option value="hi">हिन्दी</option></Select>
       </>}

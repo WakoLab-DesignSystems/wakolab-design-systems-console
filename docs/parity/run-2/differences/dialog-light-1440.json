@@ -1,0 +1,231 @@
+{
+ "case": "dialog-light-1440",
+ "exact": 12,
+ "maxChannelDelta": 4,
+ "clusters": [
+  {
+   "box": [
+    1049,
+    21,
+    1051,
+    23
+   ],
+   "count": 6,
+   "maxDelta": 4
+  },
+  {
+   "box": [
+    1067,
+    21,
+    1069,
+    23
+   ],
+   "count": 6,
+   "maxDelta": 3
+  }
+ ],
+ "crops": [
+  {
+   "file": "docs/parity/run-2/evidence/dialog-light-1440-cluster1.png",
+   "region": [
+    1043,
+    15,
+    1058,
+    30
+   ],
+   "maskedIconAreas": []
+  },
+  {
+   "file": "docs/parity/run-2/evidence/dialog-light-1440-cluster2.png",
+   "region": [
+    1061,
+    15,
+    1076,
+    30
+   ],
+   "maskedIconAreas": []
+  }
+ ],
+ "pixels": [
+  {
+   "x": 1049,
+   "y": 21,
+   "delta": 4,
+   "baseline": [
+    105,
+    107,
+    102
+   ],
+   "candidate": [
+    109,
+    110,
+    106
+   ]
+  },
+  {
+   "x": 1050,
+   "y": 21,
+   "delta": 1,
+   "baseline": [
+    104,
+    106,
+    101
+   ],
+   "candidate": [
+    104,
+    107,
+    101
+   ]
+  },
+  {
+   "x": 1051,
+   "y": 21,
+   "delta": 1,
+   "baseline": [
+    153,
+    154,
+    152
+   ],
+   "candidate": [
+    152,
+    153,
+    151
+   ]
+  },
+  {
+   "x": 1067,
+   "y": 21,
+   "delta": 1,
+   "baseline": [
+    153,
+    154,
+    152
+   ],
+   "candidate": [
+    152,
+    153,
+    151
+   ]
+  },
+  {
+   "x": 1068,
+   "y": 21,
+   "delta": 3,
+   "baseline": [
+    102,
+    104,
+    99
+   ],
+   "candidate": [
+    104,
+    107,
+    101
+   ]
+  },
+  {
+   "x": 1069,
+   "y": 21,
+   "delta": 3,
+   "baseline": [
+    106,
+    108,
+    103
+   ],
+   "candidate": [
+    109,
+    111,
+    106
+   ]
+  },
+  {
+   "x": 1049,
+   "y": 22,
+   "delta": 4,
+   "baseline": [
+    84,
+    87,
+    80
+   ],
+   "candidate": [
+    88,
+    91,
+    84
+   ]
+  },
+  {
+   "x": 1050,
+   "y": 22,
+   "delta": 1,
+   "baseline": [
+    140,
+    142,
+    139
+   ],
+   "candidate": [
+    141,
+    142,
+    139
+   ]
+  },
+  {
+   "x": 1068,
+   "y": 22,
+   "delta": 2,
+   "baseline": [
+    139,
+    141,
+    138
+   ],
+   "candidate": [
+    141,
+    142,
+    139
+   ]
+  },
+  {
+   "x": 1069,
+   "y": 22,
+   "delta": 3,
+   "baseline": [
+    86,
+    88,
+    81
+   ],
+   "candidate": [
+    88,
+    91,
+    84
+   ]
+  },
+  {
+   "x": 1049,
+   "y": 23,
+   "delta": 1,
+   "baseline": [
+    77,
+    80,
+    73
+   ],
+   "candidate": [
+    78,
+    81,
+    74
+   ]
+  },
+  {
+   "x": 1068,
+   "y": 23,
+   "delta": 1,
+   "baseline": [
+    151,
+    152,
+    150
+   ],
+   "candidate": [
+    152,
+    153,
+    151
+   ]
+  }
+ ]
+}
