@@ -5,7 +5,7 @@ Console: a terminal-inspired design system with compact layouts, monospace typog
 
 **Extraction candidate** for [#1](https://github.com/WakoLab-DesignSystems/wakolab-design-systems-console/issues/1), under review. Console's components, styles, tokens and compositions were extracted from the WakoLab frontend (provenance in [docs/PROVENANCE.md](docs/PROVENANCE.md)) following the [standard](https://github.com/WakoLab-DesignSystems/wakolab-design-systems-standard) at `6dc2a7a`. Nothing is released or published: the package is `private` and is used from a clone or a Git dependency.
 
-**Known limits:** icon artwork is not included (see [Icons](#icons)); the licence of the code adapted from the frontend needs owner confirmation (see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)); visual parity results are in [docs/PARITY.md](docs/PARITY.md).
+**Known limits:** icon artwork is not included (see [Icons](#icons)); third-party material keeps its own licence (see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)); visual parity results are in [docs/PARITY.md](docs/PARITY.md).
 
 ## About Console
 
@@ -114,7 +114,7 @@ General directions for WakoLab design systems live in the [standard repository](
 
 ## Licence
 
-MIT (see [LICENSE](LICENSE)) for original code and documentation. Fonts, Tailwind CSS output and other third-party material keep their own licences and notices: see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [licenses/](licenses/).
+MIT (see [LICENSE](LICENSE)) for original code and documentation, including the code adapted from the WakoLab frontend (WakoLab H3 decision; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)). Fonts, Tailwind CSS output and other third-party material keep their own licences and notices: see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [licenses/](licenses/).
 
 ## Contributing
 

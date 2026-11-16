@@ -238,3 +238,32 @@ test("keyboard layer: root scope acts only inside its root; page scope serves on
   await page.keyboard.press("/");
   expect(await focused(page)).toBe("host-input");
 });
+
+// Review on #5: popover keyboard behaviour inside an open modal dialog.
+test("popover inside a modal: Escape closes the popover first and keeps the dialog; outside press inside the dialog closes it; shortcuts stay off", async ({ page }) => {
+  await open(page);
+  await mount(page, "a", "slot-a", { mode: "light" });
+  await mount(page, "b", "slot-b", { mode: "dark" });
+  await page.click("#a-open-dialog");
+  const dlg = page.locator("#root-a dialog[open]");
+  await expect(dlg).toBeVisible();
+  await page.click("#a-dlg-pop");
+  await expect(page.locator("#a-dlg-pop-item")).toBeVisible();
+  await page.locator("#a-dlg-pop-item").focus();
+  for (const key of ["/", "j", "k"]) { await page.keyboard.press(key); expect(await focused(page)).toBe("a-dlg-pop-item"); }
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#a-dlg-pop-item")).toHaveCount(0);
+  await expect(dlg).toBeVisible();
+  await expect(page.locator("#a-dlg-pop")).toBeFocused();
+  // Escape on the trigger of the closed popover reaches the dialog.
+  await page.click("#a-dlg-pop");
+  await page.locator("#a-dialog-text").click();
+  await expect(page.locator("#a-dlg-pop-item")).toHaveCount(0);
+  await expect(dlg).toBeVisible();
+  await page.locator("#a-dlg-pop").focus();
+  await page.keyboard.press("Escape");
+  await expect(dlg).toHaveCount(0);
+  await expect(page.locator("#a-open-dialog")).toBeFocused();
+  // Root B's popover was never touched.
+  await expect(page.locator("#b-pop-item")).toHaveCount(0);
+});

@@ -25,7 +25,7 @@ The licence texts are copied from the packages' `LICENSE` files (they match the 
 
 Components, styles, tokens and compositions were copied or adapted from WakoLab/wakolab-front at `e492bec9ced8893d6940879aa8186ac75a48a272`. Each file records its source path and the changes made for standalone use; [docs/PROVENANCE.md](docs/PROVENANCE.md) maps every source to its destination.
 
-**Open licensing question.** The frontend at that commit has no licence file, and its README states that no licence or public release is granted by its restructuring. This repository's MIT licence was set by its owners at bootstrap; whether it may cover the adapted frontend code needs confirmation by the owners of both repositories. Until then, treat the adapted files as carrying their frontend origin.
+**Licence of this code.** The WakoLab project decided MIT for original code and accompanying documentation in the WakoLab-DesignSystems repositories, Console included ([H3 decision accepted by midas](https://github.com/WakoLab/wakolab/issues/48#issuecomment-6855888835)), and the extraction of Console's code into this repository is authorized by [#1](https://github.com/WakoLab-DesignSystems/wakolab-design-systems-console/issues/1). The adapted WakoLab code is therefore covered by [LICENSE](LICENSE); the frontend's lack of a licence file of its own does not change that decision. Existing authorship and copyright notices are kept, and no ownership transfer is implied. The decision does not relicense third-party material: the fonts and Tailwind CSS output above keep their own licences, and the frontend's icon artwork stays excluded (below) until its provenance and redistribution rights are checked.
 
 ## Not included
 

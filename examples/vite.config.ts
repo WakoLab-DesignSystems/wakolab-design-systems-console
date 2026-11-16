@@ -12,6 +12,16 @@ const fontDir = resolve(root, "public/design/fonts");
 mkdirSync(fontDir, { recursive: true });
 const font = resolve(__dirname, "../node_modules/@fontsource-variable/dm-sans/files/dm-sans-latin-wght-normal.woff2");
 if (existsSync(font)) copyFileSync(font, resolve(fontDir, "example-sans.woff2"));
+// Distinct faces for the font-selection test (tests/config.spec.ts): regular, italic and a
+// Cyrillic subset of DM Sans and JetBrains Mono, copied from the declared OFL packages.
+for (const [pkg, file, name] of [
+  ["dm-sans", "dm-sans-latin-wght-italic.woff2", "test-italic.woff2"],
+  ["jetbrains-mono", "jetbrains-mono-latin-wght-normal.woff2", "test-bold.woff2"],
+  ["jetbrains-mono", "jetbrains-mono-cyrillic-wght-normal.woff2", "test-cyrillic.woff2"],
+]) {
+  const from = resolve(__dirname, `../node_modules/@fontsource-variable/${pkg}/files/${file}`);
+  if (existsSync(from)) copyFileSync(from, resolve(fontDir, name));
+}
 
 export default defineConfig({
   root,

@@ -54,7 +54,10 @@ function DialogDemo({ id }: { id: string }) {
       <Button id={`${id}-open-dialog`} variant="secondary" onClick={() => setOpen(true)}>Dialog</Button>
       <Dialog open={open} onClose={() => setOpen(false)} title={`Dialog ${id}`} closeLabel="Close" headerClose
         actions={<Button id={`${id}-dialog-keep`} data-autofocus variant="secondary" onClick={() => setOpen(false)}>Keep</Button>}>
-        <p>Dialog content</p>
+        <p id={`${id}-dialog-text`}>Dialog content</p>
+        <Popover label={`Dialog menu ${id}`} align="start" trigger={(p) => <button {...p} ref={p.ref as React.Ref<HTMLButtonElement>} id={`${id}-dlg-pop`} type="button" className="wl-tool">Menu</button>}>
+          {() => <button type="button" id={`${id}-dlg-pop-item`} className="wl-option">Menu item</button>}
+        </Popover>
       </Dialog>
     </>
   );

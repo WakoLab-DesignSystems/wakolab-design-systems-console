@@ -229,3 +229,44 @@ test("asset failure shared by two roots: both fall back and both are told", asyn
   await expect.poll(() => page.locator("#b-ui").evaluate((e) => getComputedStyle(e).fontFamily)).toBe(def);
   expect(await page.locator("#a-ui").evaluate((e) => getComputedStyle(e).fontFamily)).toBe(def);
 });
+
+// Review on #5: distinct regular, bold, italic and subset files are selected by their descriptors,
+// shown by glyph metrics against reference faces of the same files, and a subset loads only when used.
+test("fonts: distinct regular, bold, italic and subset files are selected by descriptors", async ({ page }) => {
+  await harness(page);
+  await mount(page, "a", "slot-a", { mode: "light", assetBase: "/design/", config: { ...base, fonts: { ui: { family: "Faces", files: [
+    { src: "fonts/example-sans.woff2", weight: "400", style: "normal", unicodeRange: "U+0000-00FF" },
+    { src: "fonts/test-bold.woff2", weight: "700", style: "normal", unicodeRange: "U+0000-00FF" },
+    { src: "fonts/test-italic.woff2", weight: "400", style: "italic", unicodeRange: "U+0000-00FF" },
+    { src: "fonts/test-cyrillic.woff2", weight: "400", style: "normal", unicodeRange: "U+0400-045F" },
+  ] } } } });
+  await page.waitForTimeout(100);
+  const faces = () => page.evaluate(() => Object.fromEntries([...document.fonts].filter((f) => f.family.replace(/"/g, "").startsWith("wds-console-font-")).map((f) => [`${f.weight}/${f.style}/${f.unicodeRange}`, f.status])));
+  // Reference faces of the same files under page-level names (the test page is the host here).
+  await page.evaluate(async () => {
+    const add = async (family: string, file: string, d: FontFaceDescriptors = {}) => { const f = new FontFace(family, `url(/design/fonts/${file})`, d); document.fonts.add(f); await f.load(); };
+    await add("RefRegular", "example-sans.woff2"); await add("RefBold", "test-bold.woff2", { weight: "700" });
+    await add("RefItalic", "test-italic.woff2", { style: "italic" }); await add("RefCyr", "test-cyrillic.woff2");
+  });
+  const measure = (text: string, family: string, weight = "400", style = "normal") => page.evaluate(async ([t, f, w, s]) => {
+    const el = document.createElement("span");
+    Object.assign(el.style, { fontFamily: f, fontWeight: w, fontStyle: s, fontSize: "40px", whiteSpace: "nowrap", position: "absolute" });
+    el.textContent = t;
+    document.getElementById("a-main")!.append(el);
+    el.getBoundingClientRect(); // layout first, so that a lazily loaded face starts loading
+    await new Promise((r) => requestAnimationFrame(() => r(null)));
+    await document.fonts.ready; await new Promise((r) => requestAnimationFrame(() => r(null)));
+    const width = el.getBoundingClientRect().width; el.remove(); return width;
+  }, [text, family, weight, style] as const);
+  const latin = "Quick Wizard 0123";
+  expect(await measure(latin, "var(--wl-font-ui)")).toBeCloseTo(await measure(latin, "RefRegular"), 1);
+  expect(await faces()).toMatchObject({ "400/normal/U+400-45F": "unloaded" }); // subset not used yet, not loaded
+  expect(await measure(latin, "var(--wl-font-ui)", "700")).toBeCloseTo(await measure(latin, "RefBold", "700"), 1);
+  expect(await measure(latin, "var(--wl-font-ui)", "400", "italic")).toBeCloseTo(await measure(latin, "RefItalic", "400", "italic"), 1);
+  const cyr = "Приветмир"; // no space: U+0020 belongs to the Latin range, served by the regular file
+  expect(await measure(cyr, "var(--wl-font-ui)")).toBeCloseTo(await measure(cyr, "RefCyr"), 1);
+  expect(await faces()).toMatchObject({ "400/normal/U+400-45F": "loaded" });
+  // The faces really differ, so equal widths identify the file.
+  const widths = [await measure(latin, "RefRegular"), await measure(latin, "RefBold", "700"), await measure(latin, "RefItalic", "400", "italic")];
+  expect(new Set(widths.map((w) => w.toFixed(1))).size).toBe(3);
+});
