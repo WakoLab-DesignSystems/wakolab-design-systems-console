@@ -1,0 +1,326 @@
+{
+ "case": "dialog-light-1024",
+ "exact": 17,
+ "maxChannelDelta": 4,
+ "clusters": [
+  {
+   "box": [
+    633,
+    21,
+    635,
+    23
+   ],
+   "count": 6,
+   "maxDelta": 4
+  },
+  {
+   "box": [
+    651,
+    21,
+    653,
+    23
+   ],
+   "count": 6,
+   "maxDelta": 3
+  },
+  {
+   "box": [
+    990,
+    178,
+    991,
+    181
+   ],
+   "count": 5,
+   "maxDelta": 1
+  }
+ ],
+ "crops": [
+  {
+   "file": "docs/parity/run-2/evidence/dialog-light-1024-cluster1.png",
+   "region": [
+    627,
+    15,
+    642,
+    30
+   ],
+   "maskedIconAreas": []
+  },
+  {
+   "file": "docs/parity/run-2/evidence/dialog-light-1024-cluster2.png",
+   "region": [
+    645,
+    15,
+    660,
+    30
+   ],
+   "maskedIconAreas": []
+  },
+  {
+   "file": "docs/parity/run-2/evidence/dialog-light-1024-cluster3.png",
+   "region": [
+    984,
+    172,
+    998,
+    188
+   ],
+   "maskedIconAreas": []
+  }
+ ],
+ "pixels": [
+  {
+   "x": 633,
+   "y": 21,
+   "delta": 4,
+   "baseline": [
+    105,
+    107,
+    102
+   ],
+   "candidate": [
+    109,
+    110,
+    106
+   ]
+  },
+  {
+   "x": 634,
+   "y": 21,
+   "delta": 1,
+   "baseline": [
+    104,
+    106,
+    101
+   ],
+   "candidate": [
+    104,
+    107,
+    101
+   ]
+  },
+  {
+   "x": 635,
+   "y": 21,
+   "delta": 1,
+   "baseline": [
+    153,
+    154,
+    152
+   ],
+   "candidate": [
+    152,
+    153,
+    151
+   ]
+  },
+  {
+   "x": 651,
+   "y": 21,
+   "delta": 1,
+   "baseline": [
+    153,
+    154,
+    152
+   ],
+   "candidate": [
+    152,
+    153,
+    151
+   ]
+  },
+  {
+   "x": 652,
+   "y": 21,
+   "delta": 3,
+   "baseline": [
+    102,
+    104,
+    99
+   ],
+   "candidate": [
+    104,
+    107,
+    101
+   ]
+  },
+  {
+   "x": 653,
+   "y": 21,
+   "delta": 3,
+   "baseline": [
+    106,
+    108,
+    103
+   ],
+   "candidate": [
+    109,
+    111,
+    106
+   ]
+  },
+  {
+   "x": 633,
+   "y": 22,
+   "delta": 4,
+   "baseline": [
+    84,
+    87,
+    80
+   ],
+   "candidate": [
+    88,
+    91,
+    84
+   ]
+  },
+  {
+   "x": 634,
+   "y": 22,
+   "delta": 1,
+   "baseline": [
+    140,
+    142,
+    139
+   ],
+   "candidate": [
+    141,
+    142,
+    139
+   ]
+  },
+  {
+   "x": 652,
+   "y": 22,
+   "delta": 2,
+   "baseline": [
+    139,
+    141,
+    138
+   ],
+   "candidate": [
+    141,
+    142,
+    139
+   ]
+  },
+  {
+   "x": 653,
+   "y": 22,
+   "delta": 3,
+   "baseline": [
+    86,
+    88,
+    81
+   ],
+   "candidate": [
+    88,
+    91,
+    84
+   ]
+  },
+  {
+   "x": 633,
+   "y": 23,
+   "delta": 1,
+   "baseline": [
+    77,
+    80,
+    73
+   ],
+   "candidate": [
+    78,
+    81,
+    74
+   ]
+  },
+  {
+   "x": 652,
+   "y": 23,
+   "delta": 1,
+   "baseline": [
+    151,
+    152,
+    150
+   ],
+   "candidate": [
+    152,
+    153,
+    151
+   ]
+  },
+  {
+   "x": 990,
+   "y": 178,
+   "delta": 1,
+   "baseline": [
+    138,
+    138,
+    132
+   ],
+   "candidate": [
+    138,
+    137,
+    132
+   ]
+  },
+  {
+   "x": 991,
+   "y": 179,
+   "delta": 1,
+   "baseline": [
+    142,
+    142,
+    135
+   ],
+   "candidate": [
+    141,
+    141,
+    136
+   ]
+  },
+  {
+   "x": 990,
+   "y": 180,
+   "delta": 1,
+   "baseline": [
+    146,
+    147,
+    144
+   ],
+   "candidate": [
+    146,
+    147,
+    143
+   ]
+  },
+  {
+   "x": 990,
+   "y": 181,
+   "delta": 1,
+   "baseline": [
+    151,
+    152,
+    149
+   ],
+   "candidate": [
+    151,
+    151,
+    149
+   ]
+  },
+  {
+   "x": 991,
+   "y": 181,
+   "delta": 1,
+   "baseline": [
+    132,
+    132,
+    124
+   ],
+   "candidate": [
+    132,
+    131,
+    124
+   ]
+  }
+ ]
+}

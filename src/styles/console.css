@@ -1,0 +1,15 @@
+/* Console stylesheet entry (source of dist/console.css).
+ * Same composition as WakoLab/wakolab-front at e492bec9ced8893d6940879aa8186ac75a48a272
+ * (web/src/style.css → design-system/theme.css → themes.css, catalog.css, compositions.css),
+ * reduced to Console. The build (scripts/build.mjs) compiles it with Tailwind CSS 4.1.16, prefixes
+ * every selector with the Console root, renames global symbols and cascade layers, and adds the
+ * default font aliases (standard EXTRACTION_MATRIX §4, §9). */
+@import "tailwindcss" source(none);
+@source "../**/*.tsx";
+@import "./tokens.css";
+@import "./theme.css";
+@import "./base.css";
+@import "./console-parts.css";
+@import "./registration.css";
+@import "./global-rules.css";
+@import "./root.css";

@@ -1,0 +1,11 @@
+/* Styles of the example page itself (the consumer's own CSS), not part of Console. */
+html, body { margin: 0; }
+.ex-root { min-height: 100vh; }
+.ex-grid { display: grid; gap: 24px; }
+.ex-card { display: grid; gap: 12px; padding: 20px; border: 1px solid var(--wl-border); border-radius: var(--wl-radius-card); background: var(--wl-surface); }
+.ex-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.ex-end { justify-content: flex-end; }
+.ex-cover-row { gap: 16px; flex-wrap: nowrap; }
+.ex-cover { width: 10rem; flex-shrink: 0; }
+.ex-stack { display: grid; flex: 1; gap: 8px; }
+.ex-left { text-align: left; }

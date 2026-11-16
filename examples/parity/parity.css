@@ -1,0 +1,12 @@
+/* Parity page host styles. Original, except where noted. */
+body { margin: 0; }
+/* Product content that the frontend composes into the detail side slot (JoinPanel, Access).
+ * These rules stay in the frontend (standard EXTRACTION_MATRIX §6); they are copied here, unchanged,
+ * from WakoLab/wakolab-front at e492bec9ced8893d6940879aa8186ac75a48a272, design-system/catalog.css
+ * lines 192, 195–197 and 226, so that the comparison measures Console and not missing product
+ * rules. They are not part of the Console package. */
+[data-wds="console"] .wl-join .wl-meta-text { margin: 0; }
+[data-wds="console"] .wl-access { display: flex; gap: 12px; padding: 14px; border-radius: var(--wl-radius-control); background: var(--wl-surface-2); }
+[data-wds="console"] .wl-access p { margin: 0; }
+[data-wds="console"] .wl-access svg { flex-shrink: 0; margin-top: 2px; }
+[data-wds="console"] .wl-join-title { font-weight: 600; }
