@@ -1,0 +1,96 @@
+/* Console tokens: light and dark palettes and structural values.
+ * Copied from WakoLab/wakolab-front at e492bec9ced8893d6940879aa8186ac75a48a272, design-system/themes.css lines 2–80
+ * (the three [data-direction="console"] blocks), and the :root block of design-system/theme.css
+ * (fallback stack and durations, now on the Console root).
+ * Changes for standalone use (standard EXTRACTION_MATRIX §4, §5.1, §5.7):
+ *  - selector [data-direction="console"] → [data-wds="console"] (the Console root, never :root);
+ *  - removed the WakoLab product roles: --wl-agent: #574585;, --wl-agent-soft: #efebf8;, --wl-agent: #c4b5f5;, --wl-agent-soft: #221d33;;
+ *  - default font families renamed to internal aliases of the same files (wds-console-default-*),
+ *    emitted by the build from the declared @fontsource-variable packages;
+ *  - added --wl-action-pressed (default: the effective --wl-action-hover, as the source's
+ *    brand-active), --wl-font-code (default: the ui font) for the configuration keys.
+ * Values are otherwise unchanged. */
+/* ───────────── A · Console ───────────── */
+[data-wds="console"] {
+  --wl-font-ui:
+    "wds-console-default-jetbrains-mono", ui-monospace, "SFMono-Regular", Menlo, Consolas,
+    var(--wl-fallback-sans);
+  --wl-font-display: var(--wl-font-ui);
+  --wl-font-prose: "wds-console-default-dm-sans", var(--wl-fallback-sans);
+  --wl-heading-weight: 600;
+  --wl-heading-tracking: 0;
+  --wl-ui-size: 0.875rem; /* mono reads larger: 14px UI, 16px inputs */
+  --wl-radius-control: 4px;
+  --wl-radius-card: 6px;
+  --wl-radius-chip: 4px;
+  --wl-radius-cover: 4px;
+  --wl-border-width: 1px;
+  --wl-row-height: 44px;
+  --wl-motion: var(--wl-dur-fast);
+  --wl-hover-lift: 0px;
+  /* Added for standalone use (configuration): the code role, used by `.wl-kbd` (the source
+     hard-coded the JetBrains Mono family there), and the default fallback stack. */
+  --wl-font-code: var(--wl-font-ui);
+  --wl-fallback-sans: "wds-console-default-noto-sans-sc", "wds-console-default-noto-sans-devanagari", system-ui, sans-serif;
+  --wl-dur-fast: 100ms;
+  --wl-dur-base: 150ms;
+  --wl-dur-slow: 180ms;
+}
+[data-wds="console"][data-mode="light"] {
+  color-scheme: light;
+  --wl-on-danger: #ffffff;
+  --wl-bg: #f5f4ef;
+  --wl-surface: #ffffff;
+  --wl-surface-2: #ecebe4;
+  --wl-ink: #1c1e1b;
+  --wl-muted: #52564f;
+  --wl-border: #d6d3c9;
+  --wl-control: #767970;
+  --wl-action: #1d5c86;
+  --wl-action-hover: #164a6d;
+  --wl-action-pressed: var(--wl-action-hover);
+  --wl-on-action: #ffffff;
+  --wl-link: #1d5c86;
+  --wl-focus: #1d5c86;
+  --wl-accent: #8a4b0a;
+  --wl-success: #2a6b35;
+  --wl-success-soft: #e7f2e6;
+  --wl-warning: #7a5410;
+  --wl-warning-soft: #fbf1da;
+  --wl-danger: #a3303c;
+  --wl-danger-soft: #fbeaea;
+  --wl-info: #275d7e;
+  --wl-info-soft: #e8f1f7;
+  --wl-shadow-card: none;
+  --wl-shadow-pop: 0 8px 24px rgb(28 30 27 / 0.14);
+  --wl-scrim: rgb(28 30 27 / 0.45);
+}
+[data-wds="console"][data-mode="dark"] {
+  color-scheme: dark;
+  --wl-on-danger: #19090d;
+  --wl-bg: #121412;
+  --wl-surface: #191c19;
+  --wl-surface-2: #232723;
+  --wl-ink: #e4e2da;
+  --wl-muted: #a6a9a0;
+  --wl-border: #30342f;
+  --wl-control: #80867d;
+  --wl-action: #8ec5ee;
+  --wl-action-hover: #b0d7f4;
+  --wl-action-pressed: var(--wl-action-hover);
+  --wl-on-action: #0b1a25;
+  --wl-link: #8ec5ee;
+  --wl-focus: #f0b35c;
+  --wl-accent: #f0b35c;
+  --wl-success: #7fcb8a;
+  --wl-success-soft: #16281a;
+  --wl-warning: #e8c170;
+  --wl-warning-soft: #2a2312;
+  --wl-danger: #f49a9f;
+  --wl-danger-soft: #2e1719;
+  --wl-info: #8ec5ee;
+  --wl-info-soft: #142330;
+  --wl-shadow-card: none;
+  --wl-shadow-pop: 0 8px 28px rgb(0 0 0 / 0.5);
+  --wl-scrim: rgb(0 0 0 / 0.6);
+}

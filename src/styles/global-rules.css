@@ -1,0 +1,20 @@
+/* Copied from WakoLab/wakolab-front at e492bec9ced8893d6940879aa8186ac75a48a272, design-system/compositions.css:
+ * the universal reduced-motion rule and the heading tracking rules for Chinese and Hindi.
+ * Scoped to the Console root by the build (`*` → root descendants, `:root` → the root itself). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+:root:lang(zh-Hans) h1,
+:root:lang(zh-Hans) h2,
+:root:lang(zh-Hans) h3,
+:root:lang(hi) h1,
+:root:lang(hi) h2,
+:root:lang(hi) h3 {
+  letter-spacing: normal;
+}

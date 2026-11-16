@@ -1,0 +1,128 @@
+// Explicit configuration (standard CONFIGURATION.md and INDEPENDENCE_CHECK §3 at 6dc2a7a).
+// Values are applied as written; omitted keys keep defaults; nothing is judged.
+import { test, expect, type Page } from "@playwright/test";
+import { readFileSync } from "node:fs";
+
+const example = JSON.parse(readFileSync("examples/public/design/design-config.json", "utf8"));
+const defaults = JSON.parse(readFileSync("config.default.json", "utf8"));
+const base = { system: "console", systemVersion: "0.1.0" };
+
+async function harness(page: Page, query = "") {
+  const requests: string[] = [];
+  page.on("request", (r) => requests.push(r.url()));
+  await page.goto(`/harness/index.html${query}`);
+  await page.evaluate(() => (window as any).harness.ready);
+  return requests;
+}
+const mount = (page: Page, id: string, slot: string, props: object) => page.evaluate(([i, s, p]) => (window as any).harness.mount(i, s, p), [id, slot, props] as const);
+const update = (page: Page, id: string, props: object) => page.evaluate(([i, p]) => (window as any).harness.update(i, p), [id, props] as const);
+const v = (page: Page, id: string, name: string) => page.evaluate(([i, n]) => getComputedStyle(document.getElementById(`root-${i}`)!).getPropertyValue(n).trim(), [id, name] as const);
+const settle = (page: Page) => page.waitForTimeout(50);
+
+test("example file: values exactly as written in each mode; omitted roles keep defaults; pressed follows the effective hover", async ({ page }) => {
+  await harness(page);
+  await mount(page, "a", "slot-a", { config: example, assetBase: "/design/", mode: "light" });
+  await settle(page);
+  for (const [role, value] of Object.entries(example.colors.light)) expect(await v(page, "a", `--wl-${role}`), `light ${role}`).toBe(value);
+  for (const role of ["surface", "ink", "on-action", "danger", "accent", "scrim"]) expect(await v(page, "a", `--wl-${role}`), `light ${role} default`).toBe(defaults.colors.light[role].replace(/rgb\((\d+) (\d+) (\d+) \/ ([\d.]+)\)/, "rgb($1 $2 $3 / $4)"));
+  expect(await v(page, "a", "--wl-action-pressed")).toBe(example.colors.light["action-hover"]);
+  expect(await page.locator("#a-primary").evaluate((b) => getComputedStyle(b).backgroundColor)).toBe("rgb(14, 124, 102)");
+  await update(page, "a", { config: example, assetBase: "/design/", mode: "dark" });
+  await settle(page);
+  for (const [role, value] of Object.entries(example.colors.dark)) expect(await v(page, "a", `--wl-${role}`), `dark ${role}`).toBe(value);
+  expect(await v(page, "a", "--wl-focus")).toBe(defaults.colors.dark.focus);
+  expect(await v(page, "a", "--wl-action-pressed")).toBe(example.colors.dark["action-hover"]);
+});
+
+test("explicit action-pressed wins; any CSS colour syntax is used as written, even low contrast", async ({ page }) => {
+  await harness(page);
+  await mount(page, "a", "slot-a", { mode: "light", config: { ...base, colors: { light: { action: "rgb(200 10 10)", "action-pressed": "#ff00aa", "on-action": "#fefefe", surface: "#fdfdfd" } } } });
+  await settle(page);
+  expect(await v(page, "a", "--wl-action")).toBe("rgb(200 10 10)");
+  expect(await v(page, "a", "--wl-action-pressed")).toBe("#ff00aa");
+  expect(await v(page, "a", "--wl-on-action")).toBe("#fefefe");
+  expect(await page.evaluate(() => (window as any).harness.diagnostics.length)).toBe(0);
+});
+
+test("action only (C1): link and focus keep their defaults; pressed follows the default hover; dark unchanged; explicit then removed", async ({ page }) => {
+  await harness(page);
+  await mount(page, "a", "slot-a", { mode: "light", config: { ...base, colors: { light: { action: "#0e7c66" } } } });
+  await settle(page);
+  expect(await v(page, "a", "--wl-action")).toBe("#0e7c66");
+  expect(await v(page, "a", "--wl-link")).toBe(defaults.colors.light.link);
+  expect(await v(page, "a", "--wl-focus")).toBe(defaults.colors.light.focus);
+  expect(await v(page, "a", "--wl-action-pressed")).toBe(defaults.colors.light["action-hover"]);
+  await update(page, "a", { mode: "dark", config: { ...base, colors: { light: { action: "#0e7c66" } } } });
+  await settle(page);
+  expect(await v(page, "a", "--wl-action")).toBe(defaults.colors.dark.action);
+  await update(page, "a", { mode: "light", config: { ...base, colors: { light: { action: "#0e7c66", link: "#123456", focus: "#654321" } } } });
+  await settle(page);
+  expect(await v(page, "a", "--wl-link")).toBe("#123456");
+  expect(await v(page, "a", "--wl-focus")).toBe("#654321");
+  await update(page, "a", { mode: "light", config: { ...base, colors: { light: { action: "#0e7c66" } } } });
+  await settle(page);
+  expect(await v(page, "a", "--wl-link")).toBe(defaults.colors.light.link);
+  expect(await v(page, "a", "--wl-focus")).toBe(defaults.colors.light.focus);
+  await update(page, "a", { mode: "dark", config: { ...base, colors: { dark: { action: "#abcdef" } } } });
+  await settle(page);
+  expect(await v(page, "a", "--wl-action")).toBe("#abcdef");
+  await update(page, "a", { mode: "light", config: { ...base, colors: { dark: { action: "#abcdef" } } } });
+  await settle(page);
+  expect(await v(page, "a", "--wl-action")).toBe(defaults.colors.light.action);
+});
+
+test("fonts and logos from the consumer's files; removal restores defaults; text fallback without a logo", async ({ page }) => {
+  await harness(page);
+  await mount(page, "a", "slot-a", { mode: "light" });
+  await settle(page);
+  await expect(page.locator("#root-a .wl-brand")).toHaveText("›Root a");
+  const defaultFont = await page.locator("#a-ui").evaluate((e) => getComputedStyle(e).fontFamily);
+  expect(defaultFont).toContain("wds-console-default-jetbrains-mono");
+  await update(page, "a", { mode: "light", config: example, assetBase: "/design/" });
+  await page.waitForFunction(() => [...document.fonts].some((f) => f.family.startsWith("wds-console-font-") && f.status === "loaded") || document.fonts.ready);
+  await page.evaluate(() => document.fonts.ready);
+  const fam = await page.locator("#a-ui").evaluate((e) => getComputedStyle(e).fontFamily);
+  expect(fam).toMatch(/^"?wds-console-font-[0-9a-f]{8}"?, ui-monospace/);
+  expect(fam).not.toContain("Example Sans");
+  expect(await page.evaluate(() => [...document.fonts].filter((f) => f.family.startsWith("wds-console-font-")).map((f) => f.status))).toContain("loaded");
+  const mark = page.locator("#root-a .wl-logo-mark"), word = page.locator("#root-a .wl-logo-wordmark");
+  await expect(mark).toHaveAttribute("src", /\/design\/logo\/mark\.svg$/);
+  await expect(word).toHaveAttribute("src", /wordmark-light\.svg$/);
+  await expect(page.locator("#root-a .wl-brand")).toHaveAttribute("aria-label", "Example App home");
+  expect(await mark.evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth > 0)).toBe(true);
+  await update(page, "a", { mode: "dark", config: example, assetBase: "/design/" });
+  await expect(word).toHaveAttribute("src", /wordmark-dark\.svg$/);
+  await update(page, "a", { mode: "light", config: { ...base, logo: { wordmark: "logo/wordmark-light.svg" } }, assetBase: "/design/" });
+  await expect(page.locator("#root-a .wl-logo-mark")).toHaveCount(0);
+  await expect(word).toHaveAttribute("src", /wordmark-light\.svg$/);
+  await expect(page.locator("#root-a .wl-brand")).toHaveAttribute("aria-label", "Root a");
+  await update(page, "a", { mode: "light" });
+  await settle(page);
+  await expect(page.locator("#root-a .wl-brand")).toHaveText("›Root a");
+  expect(await page.locator("#a-ui").evaluate((e) => getComputedStyle(e).fontFamily)).toBe(defaultFont);
+  expect(await page.evaluate(() => (window as any).harness.faceSets())).toEqual({});
+});
+
+test("structural diagnostics only: wrong types, unknown keys and roles, unresolved and missing assets; defaults kept", async ({ page }) => {
+  await harness(page);
+  const bad = { system: "folio", extra: 1, colors: { light: { action: 12, nope: "#000", link: "not a colour at all" }, sepia: {} },
+    fonts: { ui: { family: "X", files: [{ src: "fonts/missing.woff2" }] }, display: { files: [] } }, logo: { mark: "logo/mark.svg", alt: 3 } };
+  await mount(page, "a", "slot-a", { mode: "light", config: bad }); // no assetBase
+  await settle(page);
+  const keys = await page.evaluate(() => (window as any).harness.diagnostics.map((d: any) => d.key));
+  for (const k of ["extra", "system", "systemVersion", "colors.light.action", "colors.light.nope", "colors.sepia", "fonts.ui.files[0].src", "fonts.ui", "fonts.display", "logo.mark", "logo.alt"]) expect(keys, k).toContain(k);
+  expect(await v(page, "a", "--wl-action")).toBe(defaults.colors.light.action);
+  expect(keys).not.toContain("colors.light.link");
+  expect(await v(page, "a", "--wl-link")).toBe("not a colour at all"); // used as written; the browser decides
+  await update(page, "a", { mode: "light", config: { ...base, fonts: { ui: { family: "X", files: [{ src: "fonts/missing.woff2" }] } } }, assetBase: "/design/" });
+  await page.waitForFunction(() => (window as any).harness.diagnostics.some((d: any) => /failed to load/.test(d.message)), null, { timeout: 5000 });
+});
+
+test("no request other than the page's own assets", async ({ page }) => {
+  const requests = await harness(page);
+  await mount(page, "a", "slot-a", { mode: "light", config: example, assetBase: "/design/" });
+  await page.waitForTimeout(500);
+  const foreign = requests.filter((u) => !u.startsWith("http://127.0.0.1:5190/"));
+  expect(foreign).toEqual([]);
+  expect(requests.some((u) => /\/api\//.test(u))).toBe(false);
+});
