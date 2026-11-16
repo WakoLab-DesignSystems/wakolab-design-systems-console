@@ -126,3 +126,106 @@ test("no request other than the page's own assets", async ({ page }) => {
   expect(foreign).toEqual([]);
   expect(requests.some((u) => /\/api\//.test(u))).toBe(false);
 });
+
+// Review R2 on #5: each font role keeps or restores its own default, independently of ui.
+test("fonts: ui alone leaves display and code at their defaults; each role is set and removed independently", async ({ page }) => {
+  await harness(page);
+  const fam = (id: string, el: string) => page.locator(`#${id}-${el}`).evaluate((e) => getComputedStyle(e).fontFamily);
+  await mount(page, "a", "slot-a", { mode: "light" });
+  await page.waitForTimeout(50);
+  const initial = { ui: await fam("a", "ui"), display: await fam("a", "display"), code: await fam("a", "code"), prose: await fam("a", "prose") };
+  expect(initial.display).toMatch(/^"?wds-console-default-jetbrains-mono"?,/);
+  expect(initial.code).toMatch(/^"?wds-console-default-jetbrains-mono"?,/);
+  const file = (q: string) => ({ family: "Example Sans", files: [{ src: `fonts/example-sans.woff2?${q}` }] });
+  const set = (fonts: object) => update(page, "a", { mode: "light", assetBase: "/design/", config: { ...base, fonts } });
+  // ui only
+  await set({ ui: file("ui") });
+  await page.waitForTimeout(100);
+  expect(await fam("a", "ui")).toMatch(/^"?wds-console-font-/);
+  expect(await fam("a", "display")).toBe(initial.display);
+  expect(await fam("a", "code")).toBe(initial.code);
+  expect(await fam("a", "prose")).toBe(initial.prose);
+  // explicit display and code, then remove each one alone
+  await set({ ui: file("ui"), display: file("display"), code: file("code") });
+  await page.waitForTimeout(100);
+  const [u, d, c] = [await fam("a", "ui"), await fam("a", "display"), await fam("a", "code")];
+  for (const f of [u, d, c]) expect(f).toMatch(/^"?wds-console-font-/);
+  expect(new Set([u, d, c]).size).toBe(3);
+  await set({ ui: file("ui"), code: file("code") });
+  await page.waitForTimeout(100);
+  expect(await fam("a", "display")).toBe(initial.display);
+  expect(await fam("a", "code")).toBe(c);
+  await set({ ui: file("ui") });
+  await page.waitForTimeout(100);
+  expect(await fam("a", "code")).toBe(initial.code);
+  expect(await fam("a", "ui")).toBe(u);
+  await set({ display: file("display") });
+  await page.waitForTimeout(100);
+  expect(await fam("a", "ui")).toBe(initial.ui);
+  expect(await fam("a", "display")).toBe(d);
+  expect(await fam("a", "code")).toBe(initial.code);
+  await update(page, "a", { mode: "light" });
+  await page.waitForTimeout(100);
+  expect({ ui: await fam("a", "ui"), display: await fam("a", "display"), code: await fam("a", "code"), prose: await fam("a", "prose") }).toEqual(initial);
+});
+
+// Review R3 on #5: a failed asset restores the affected default, is reported structurally, and the
+// root recovers when a valid configuration arrives; other roots and host-owned fonts are untouched.
+test("asset failure: missing font and logo files fall back to defaults, are reported, and recover", async ({ page }) => {
+  await harness(page);
+  // A font owned by the host page, outside Console.
+  await page.evaluate(async () => { const f = new FontFace("Host Face", "url(/design/fonts/example-sans.woff2?host)"); document.fonts.add(f); await f.load(); (window as any).__hostFace = f; });
+  const fam = (id: string, el = "ui") => page.locator(`#${id}-${el}`).evaluate((e) => getComputedStyle(e).fontFamily);
+  const keys = () => page.evaluate(() => (window as any).harness.diagnostics.map((d: any) => `${d.id}:${d.key}`));
+  const missing = { ...base, fonts: { ui: { family: "Example Sans", files: [{ src: "fonts/missing-ui.woff2" }] }, display: { family: "Example Sans", files: [{ src: "fonts/example-sans.woff2?display" }] } },
+    logo: { mark: "logo/missing-mark.svg", wordmark: { light: "logo/missing-word.svg", dark: "logo/wordmark-dark.svg" }, alt: "Broken logo" } };
+  await mount(page, "a", "slot-a", { mode: "light" });
+  await page.waitForTimeout(50);
+  const defaults = { ui: await fam("a"), display: await fam("a", "display") };
+  await mount(page, "b", "slot-b", { mode: "light", config: example, assetBase: "/design/" });
+  await update(page, "a", { mode: "light", config: missing, assetBase: "/design/" });
+  await page.waitForFunction(() => (window as any).harness.diagnostics.some((d: any) => d.key === "fonts.ui.files[0].src"));
+  await expect(page.locator("#root-a .wl-brand")).toHaveText("›Root a");
+  expect(await keys()).toEqual(expect.arrayContaining(["a:fonts.ui.files[0].src", "a:logo.mark", "a:logo.wordmark.light"]));
+  expect(await fam("a")).toBe(defaults.ui); // failed ui role: default restored
+  expect(await fam("a", "display")).toMatch(/^"?wds-console-font-/); // the valid display file is unaffected
+  await expect(page.locator("#root-a .wl-brand")).toHaveAttribute("aria-label", "Broken logo");
+  // Other root and host font untouched.
+  expect(await fam("b")).toMatch(/^"?wds-console-font-/);
+  expect(await page.locator("#root-b .wl-logo-mark").evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth > 0)).toBe(true);
+  expect(await keys()).not.toEqual(expect.arrayContaining([expect.stringMatching(/^b:/)]));
+  expect(await page.evaluate(() => [...document.fonts].includes((window as any).__hostFace) && (window as any).__hostFace.status)).toBe("loaded");
+  // Dark wordmark is valid: the dark logo shows the wordmark only (the mark stays dropped).
+  await update(page, "a", { mode: "dark", config: missing, assetBase: "/design/" });
+  await expect(page.locator("#root-a .wl-logo-wordmark")).toHaveAttribute("src", /wordmark-dark\.svg$/);
+  await expect(page.locator("#root-a .wl-logo-mark")).toHaveCount(0);
+  // Recovery: a valid configuration replaces the failed files.
+  await update(page, "a", { mode: "light", config: example, assetBase: "/design/" });
+  await expect(page.locator("#root-a .wl-logo-mark")).toHaveAttribute("src", /\/logo\/mark\.svg$/);
+  await expect.poll(() => page.locator("#root-a .wl-logo-wordmark").evaluate((i: HTMLImageElement) => i.complete && i.naturalWidth > 0)).toBe(true);
+  expect(await fam("a")).toMatch(/^"?wds-console-font-/);
+  expect(await fam("a")).toBe(await fam("b")); // same face set as root b, shared
+  // Replacement by a failing file again, then removal: defaults each time.
+  await update(page, "a", { mode: "light", config: { ...base, fonts: { ui: { family: "X", files: [{ src: "fonts/missing-again.woff2" }] } } }, assetBase: "/design/" });
+  await expect.poll(() => fam("a")).toBe(defaults.ui);
+  await expect(page.locator("#root-a .wl-brand")).toHaveText("›Root a");
+  await update(page, "a", { mode: "light" });
+  await page.waitForTimeout(50);
+  expect({ ui: await fam("a"), display: await fam("a", "display") }).toEqual(defaults);
+  expect(await fam("b")).toMatch(/^"?wds-console-font-/);
+  expect(await page.evaluate(() => (window as any).__hostFace.status)).toBe("loaded");
+});
+
+test("asset failure shared by two roots: both fall back and both are told", async ({ page }) => {
+  await harness(page);
+  const cfg = { ...base, fonts: { ui: { family: "Same", files: [{ src: "fonts/missing-shared.woff2" }] } } };
+  await mount(page, "a", "slot-a", { mode: "light" });
+  await page.waitForTimeout(50);
+  const def = await page.locator("#a-ui").evaluate((e) => getComputedStyle(e).fontFamily);
+  await update(page, "a", { mode: "light", config: cfg, assetBase: "/design/" });
+  await page.waitForFunction(() => (window as any).harness.diagnostics.some((d: any) => d.id === "a" && d.key === "fonts.ui.files[0].src"));
+  await mount(page, "b", "slot-b", { mode: "dark", config: cfg, assetBase: "/design/" });
+  await page.waitForFunction(() => (window as any).harness.diagnostics.some((d: any) => d.id === "b" && d.key === "fonts.ui.files[0].src"));
+  await expect.poll(() => page.locator("#b-ui").evaluate((e) => getComputedStyle(e).fontFamily)).toBe(def);
+  expect(await page.locator("#a-ui").evaluate((e) => getComputedStyle(e).fontFamily)).toBe(def);
+});

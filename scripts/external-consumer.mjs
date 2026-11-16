@@ -35,7 +35,8 @@ pass("npm ci builds through prepare", "dist/index.js and dist/console.css presen
 sh("npm", ["run", "--silent", "check"], clone); pass("type check");
 console.log(sh("node", ["scripts/check-dist.mjs"], clone));
 console.log(sh("node", ["scripts/theme-tokens.mjs"], clone));
-pass("package checks in the clone", "check-dist, theme-tokens");
+console.log(sh("node", ["scripts/check-artwork.mjs"], clone));
+pass("package checks in the clone", "check-dist, theme-tokens, check-artwork");
 const tgz = sh("npm", ["pack", "--silent", "--ignore-scripts", "--pack-destination", work], clone).trim().split("\n").at(-1);
 const listing = JSON.parse(sh("npm", ["pack", "--dry-run", "--json", "--ignore-scripts"], clone))[0].files.map((f) => f.path);
 for (const required of ["dist/index.js", "dist/index.d.ts", "dist/console.css", "config.default.json", "config.schema.json", "THIRD_PARTY_NOTICES.md", "LICENSE"]) if (!listing.includes(required)) throw new Error(`package is missing ${required}`);
@@ -106,7 +107,11 @@ async function serveAndCheck(name, app) {
     for (const [role, value] of Object.entries(config.colors.light)) if ((await read("a", `--wl-${role}`)) !== value) throw new Error(`${name}: light ${role}`);
     if ((await read("a", "--wl-danger")) !== defaults.colors.light.danger || (await read("a", "--wl-surface")) !== defaults.colors.light.surface) throw new Error(`${name}: omitted roles`);
     if ((await read("b", "--wl-action")) !== defaults.colors.dark.action) throw new Error(`${name}: unconfigured root`);
-    const fam = await page.evaluate(() => getComputedStyle(document.getElementById("a-title")).fontFamily);
+    // The example configures the ui role only: ui text uses the consumer's file, while the omitted
+    // display role (headings) keeps Console's default (review R2 on #5).
+    const fam = await page.evaluate(() => getComputedStyle(document.querySelector("#root-a .wl-home")).fontFamily);
+    const famHeading = await page.evaluate(() => getComputedStyle(document.getElementById("a-title")).fontFamily);
+    if (!/^"?wds-console-default-jetbrains-mono/.test(famHeading)) throw new Error(`${name}: omitted display role changed (${famHeading})`);
     if (!/^"?wds-console-font-[0-9a-f]{8}/.test(fam)) throw new Error(`${name}: configured font not used (${fam})`);
     const famB = await page.evaluate(() => getComputedStyle(document.getElementById("b-title")).fontFamily);
     if (!/^"?wds-console-default-jetbrains-mono/.test(famB)) throw new Error(`${name}: default font (${famB})`);
@@ -122,7 +127,7 @@ async function serveAndCheck(name, app) {
     await page.setViewportSize({ width: 1280, height: 720 });
     await page.screenshot({ path: join(work, `${name}.png`), fullPage: true });
     await browser.close();
-    pass(`consumer (${name})`, `configured colours per mode, omitted roles default, font ${fam.split(",")[0]}, ${logo.length} logo images, text fallback, host untouched, ${requests.length} requests all same-origin`);
+    pass(`consumer (${name})`, `configured colours per mode, omitted roles default, ui font ${fam.split(",")[0]}, display font default, ${logo.length} logo images, text fallback, host untouched, ${requests.length} requests all same-origin`);
   } finally {
     try { process.kill(-server.pid); } catch { /* already stopped */ }
   }

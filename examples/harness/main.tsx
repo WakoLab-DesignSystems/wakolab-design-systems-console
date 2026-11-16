@@ -23,6 +23,8 @@ function Content({ id }: { id: string }) {
         <p className="wl-lead" id={`${id}-lead`}>Synthetic content of root {id}.</p>
         <span id={`${id}-ui`} style={{ fontFamily: "var(--wl-font-ui)" }}>ui text Wg</span>
         <span id={`${id}-prose`} style={{ fontFamily: "var(--wl-font-prose)" }}>prose text Wg</span>
+        <h1 id={`${id}-display`} style={{ fontFamily: "var(--wl-font-display)" }}>display text Wg</h1>
+        <kbd id={`${id}-code`} className="wl-kbd">/</kbd>
         <Button id={`${id}-primary`}>Primary</Button>
         <Button id={`${id}-ghost`} variant="ghost">Ghost</Button>
         <a href="#x" id={`${id}-link`} className="wl-back">Link</a>

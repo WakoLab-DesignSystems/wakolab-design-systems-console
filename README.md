@@ -70,7 +70,7 @@ Pass a parsed `design-config.json` as `config` ([schema](config.schema.json), [d
 ```
 
 - **Colours:** per mode (`light`, `dark`), by role: `bg`, `surface`, `surface-2`, `ink`, `muted`, `border`, `control`, `action`, `action-hover`, `action-pressed`, `on-action`, `link`, `focus`, `accent`, `success`, `success-soft`, `warning`, `warning-soft`, `danger`, `danger-soft`, `info`, `info-soft`, `on-danger`, `scrim`, `shadow-card`, `shadow-pop`. Any CSS colour syntax. Setting `action` does not change `link` or `focus`. `action-pressed` defaults to the effective `action-hover` of the same mode.
-- **Fonts:** roles `ui`, `display`, `prose`, `code`; each takes your own font files (`src`, optional `weight`, `style`, `stretch`, `unicodeRange`). Console registers them under an internal family name, so your `family` label never collides with other fonts on the page. By default `display` and `code` follow `ui`.
+- **Fonts:** roles `ui`, `display`, `prose`, `code`; each takes your own font files (`src`, optional `weight`, `style`, `stretch`, `unicodeRange`). Console registers them under an internal family name, so your `family` label never collides with other fonts on the page. Each role keeps its own default when omitted or removed (`ui`, `display` and `code`: JetBrains Mono; `prose`: DM Sans); configuring `ui` does not change the other roles.
 - **Logo:** `mark` and/or `wordmark` (one file, or one per mode) and `alt`. Without logo files, the logo slot shows the text fallback (`›` and the label).
 - **Paths:** relative file paths resolve against `assetBase`; absolute URLs are used as given. Console requests only these files and its own default font files from `dist/fonts/`.
 
@@ -78,13 +78,15 @@ Custom properties (`--wl-*`) can still be set on the root by hand as a low-level
 
 ## Icons
 
-Console ships **no icon artwork**: the provenance of the frontend's icon paths is unresolved (standard EXTRACTION_MATRIX §10, E4), so they were not copied. Components keep their icon slots (`search`, `x`, `check`, `chevronRight`, `chevronLeft`, `chevronDown`, `human`, `agent`, `lock`, `repo`, `clock`, `alert`, `info`, `offline`, `mail`, `globe`, `sun`, `moon`, `palette`, `spark`, `play`, `doc`, `external`, `list`, `user`). Supply your own 24×24 outline paths (drawn with a 1.75 stroke, round caps and joins):
+Console ships **no icon artwork**: the provenance of the frontend's icon paths is unresolved (standard EXTRACTION_MATRIX §10, E4), so they were not copied. Components keep their icon slots (`search`, `x`, `check`, `chevronRight`, `chevronLeft`, `chevronDown`, `human`, `agent`, `lock`, `repo`, `clock`, `alert`, `info`, `offline`, `mail`, `globe`, `sun`, `moon`, `palette`, `spark`, `play`, `doc`, `external`, `list`, `user`). Supply your own icon set: an object that maps these names to SVG path data you are entitled to use, drawn for a 24×24 view box (the wrapper strokes paths at 1.75 with round caps and joins and no fill). Keep it in your own project and pass it to the root:
 
 ```tsx
-<ConsoleRoot icons={{ search: "M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14Zm5-2 4 4", x: "M6 6l12 12M18 6 6 18" }}>…</ConsoleRoot>
+import { myIconPaths } from "./icons/my-icon-paths"; // your file: { search: "<your path data>", x: "<your path data>", … }
+
+<ConsoleRoot icons={myIconPaths}>…</ConsoleRoot>
 ```
 
-A name without a path renders an empty box of the same size, marked `data-icon-missing`; nothing is substituted.
+A name without a path renders an empty box of the same size, marked `data-icon-missing`; nothing is substituted. `scripts/check-artwork.mjs` (part of `npm test`) fails if the documentation or the package contains SVG path data, or if any tracked file matches the excluded frontend icons (compared by one-way hashes only).
 
 ## Examples
 

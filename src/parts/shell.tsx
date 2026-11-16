@@ -6,11 +6,13 @@
  * Changes for standalone use:
  *  - Brand becomes a logo slot: without logo files the text fallback is identical to the source
  *    (`›` prompt glyph and the label); with files it renders the configured mark and/or wordmark.
+ *    A file that fails to load is reported (logo.mark, logo.wordmark, logo.wordmark.light|dark)
+ *    and dropped as if omitted; with nothing left the text fallback returns; a new file is retried.
  *    The hard-coded product name is replaced by the `label` prop.
  *  - Tool triggers take their icon, label and value as props (no i18n, theme list or account logic).
  *  - The mode menu takes its labels as props and controls the Console root's mode only.
  */
-import { useId, type ReactNode, type Ref } from "react";
+import { useEffect, useId, useState, type ReactNode, type Ref } from "react";
 import { Popover } from "../components";
 import { Icon, type IconName } from "../components/icons";
 import { useConsole } from "../root/context";
@@ -24,17 +26,26 @@ export function LogoSlot({ label, accessibleName, href = "./", onHome }: {
   accessibleName?: string;
   href?: string; onHome?: () => void;
 }) {
-  const { logo, resolvedMode } = useConsole();
+  const { logo, resolvedMode, report } = useConsole();
+  const [broken, setBroken] = useState<ReadonlySet<string>>(() => new Set());
+  useEffect(() => setBroken(new Set()), [logo]); // a new logo configuration is tried afresh
   const name = accessibleName ?? logo.alt ?? label;
-  const word = logo.wordmark ? (typeof logo.wordmark === "string" ? logo.wordmark : logo.wordmark[resolvedMode]) : undefined;
-  const hasLogo = Boolean(logo.mark || word);
+  const wordKey = logo.wordmark ? (typeof logo.wordmark === "string" ? "logo.wordmark" : `logo.wordmark.${resolvedMode}`) : "";
+  const wordSrc = logo.wordmark ? (typeof logo.wordmark === "string" ? logo.wordmark : logo.wordmark[resolvedMode]) : undefined;
+  const mark = logo.mark && !broken.has(logo.mark) ? logo.mark : undefined;
+  const word = wordSrc && !broken.has(wordSrc) ? wordSrc : undefined;
+  const fail = (key: string, src: string) => {
+    report({ key, message: `logo file failed to load: ${src}; ${key} is treated as omitted` });
+    setBroken((s) => new Set(s).add(src));
+  };
+  const hasLogo = Boolean(mark || word);
   return (
-    <a href={href} className={`wl-brand wl-brand--prompt${hasLogo ? " wl-brand--logo" : ""}${logo.mark ? " wl-brand--has-mark" : ""}`} aria-label={name}
+    <a href={href} className={`wl-brand wl-brand--prompt${hasLogo ? " wl-brand--logo" : ""}${mark ? " wl-brand--has-mark" : ""}`} aria-label={name}
       onClick={(e) => { if (!onHome) return; e.preventDefault(); onHome(); }}>
       {hasLogo ? (
         <>
-          {logo.mark && <img className="wl-logo-mark" src={logo.mark} alt="" />}
-          {word && <img className="wl-logo-wordmark" src={word} alt="" />}
+          {mark && <img key={mark} className="wl-logo-mark" src={mark} alt="" onError={() => fail("logo.mark", mark)} />}
+          {word && <img key={word} className="wl-logo-wordmark" src={word} alt="" onError={() => fail(wordKey, word)} />}
         </>
       ) : (
         <>

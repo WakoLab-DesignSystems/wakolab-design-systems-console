@@ -8,14 +8,20 @@
  *  - default font families renamed to internal aliases of the same files (wds-console-default-*),
  *    emitted by the build from the declared @fontsource-variable packages;
  *  - added --wl-action-pressed (default: the effective --wl-action-hover, as the source's
- *    brand-active), --wl-font-code (default: the ui font) for the configuration keys.
+ *    brand-active) and --wl-font-code (default: the stack the source hard-coded on `.wl-kbd`)
+ *    for the configuration keys;
+ *  - --wl-font-display is written out as its own default (the same stack as the ui default)
+ *    instead of the source's var(--wl-font-ui), so that configuring ui alone leaves display
+ *    unchanged (configuration: omitted keys keep their defaults; review R2 on #5).
  * Values are otherwise unchanged. */
 /* ───────────── A · Console ───────────── */
 [data-wds="console"] {
   --wl-font-ui:
     "wds-console-default-jetbrains-mono", ui-monospace, "SFMono-Regular", Menlo, Consolas,
     var(--wl-fallback-sans);
-  --wl-font-display: var(--wl-font-ui);
+  --wl-font-display:
+    "wds-console-default-jetbrains-mono", ui-monospace, "SFMono-Regular", Menlo, Consolas,
+    var(--wl-fallback-sans);
   --wl-font-prose: "wds-console-default-dm-sans", var(--wl-fallback-sans);
   --wl-heading-weight: 600;
   --wl-heading-tracking: 0;
@@ -28,9 +34,10 @@
   --wl-row-height: 44px;
   --wl-motion: var(--wl-dur-fast);
   --wl-hover-lift: 0px;
-  /* Added for standalone use (configuration): the code role, used by `.wl-kbd` (the source
-     hard-coded the JetBrains Mono family there), and the default fallback stack. */
-  --wl-font-code: var(--wl-font-ui);
+  /* Added for standalone use (configuration): the code role, used by `.wl-kbd`, with the stack
+     the source hard-coded there ("JetBrains Mono Variable", ui-monospace, monospace), and the
+     default fallback stack. */
+  --wl-font-code: "wds-console-default-jetbrains-mono", ui-monospace, monospace;
   --wl-fallback-sans: "wds-console-default-noto-sans-sc", "wds-console-default-noto-sans-devanagari", system-ui, sans-serif;
   --wl-dur-fast: 100ms;
   --wl-dur-base: 150ms;

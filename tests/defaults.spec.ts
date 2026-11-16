@@ -109,7 +109,7 @@ test("toast does not take focus; busy button keeps its name", async ({ page }) =
   await expect(page.getByRole("button", { name: "Saving" })).toHaveAttribute("aria-busy", "true");
 });
 
-test("icons: no artwork ships; every icon slot is present and marked missing", async ({ page }) => {
+test("icons: rendered icon slots carry no path data and are marked missing (package and documentation: scripts/check-artwork.mjs)", async ({ page }) => {
   await open(page, "screen=components&mode=light");
   const r = await page.evaluate(() => ({ svgs: document.querySelectorAll("svg[data-icon]").length, missing: document.querySelectorAll("svg[data-icon-missing]").length, paths: document.querySelectorAll("svg[data-icon] path").length }));
   expect(r.svgs).toBeGreaterThan(0);

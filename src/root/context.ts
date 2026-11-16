@@ -2,6 +2,7 @@
  * ThemeProvider of WakoLab/wakolab-front web/src/theme/ThemeProvider.tsx at
  * e492bec9ced8893d6940879aa8186ac75a48a272; standard EXTRACTION_MATRIX §4 Provider). */
 import { createContext, useContext, type RefObject } from "react";
+import type { Diagnostic } from "./config";
 
 export type Mode = "light" | "dark" | "system";
 export type ResolvedMode = "light" | "dark";
@@ -22,6 +23,8 @@ export interface ConsoleContextValue {
   logo: ResolvedLogo;
   /** The root element: listeners and lookups stay inside it. */
   rootRef: RefObject<HTMLDivElement | null>;
+  /** Reports a structural problem (for example a logo file that failed to load) to `onDiagnostic`. */
+  report: (d: Diagnostic) => void;
 }
 
 export const ConsoleContext = createContext<ConsoleContextValue | null>(null);

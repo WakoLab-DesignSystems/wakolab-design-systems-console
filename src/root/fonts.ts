@@ -3,11 +3,15 @@
  *  - one internal family per complete face set (all files with their descriptors), never the
  *    consumer's `family` label;
  *  - one FontFace per file under that family, cached and reference-counted per family;
- *  - a registration is deleted only when no root uses its family any more. */
+ *  - a registration is deleted only when no root uses its family any more;
+ *  - a face that fails to load marks its whole set as failed and notifies every root using it, so
+ *    each one can fall back to the role's default (configuration §7; review R3 on #5). A failed set
+ *    stays failed until it is released by every root; a new configuration (other files) is a new set. */
 import type { FontFile } from "./config";
 
 type ResolvedFile = FontFile & { url: string };
-interface Entry { count: number; faces: FontFace[] }
+type ErrorListener = (url: string) => void;
+interface Entry { count: number; faces: FontFace[]; failed: string[]; listeners: ErrorListener[] }
 const registry = new Map<string, Entry>();
 
 function fnv1a(text: string): string {
@@ -25,28 +29,39 @@ export function familyForFaceSet(files: ResolvedFile[]): string {
   return `wds-console-font-${fnv1a(JSON.stringify(canon))}`;
 }
 
-/** Registers (or reuses) the face set and returns its internal family. */
-export function acquireFaceSet(files: ResolvedFile[], onError: (url: string) => void): string {
+/** Registers (or reuses) the face set and returns its internal family. `onError` is called for
+ *  each failed file of the set (also later, and also when the set had already failed). */
+export function acquireFaceSet(files: ResolvedFile[], onError: ErrorListener): string {
   const family = familyForFaceSet(files);
-  const entry = registry.get(family);
-  if (entry) { entry.count++; return family; }
-  const faces = files.map((f) => {
+  const existing = registry.get(family);
+  if (existing) {
+    existing.count++; existing.listeners.push(onError);
+    for (const url of existing.failed) queueMicrotask(() => onError(url));
+    return family;
+  }
+  const entry: Entry = { count: 1, faces: [], failed: [], listeners: [onError] };
+  registry.set(family, entry);
+  entry.faces = files.map((f) => {
     const face = new FontFace(family, `url(${JSON.stringify(f.url)})`, {
       ...(f.weight ? { weight: f.weight } : {}), ...(f.style ? { style: f.style } : {}),
       ...(f.stretch ? { stretch: f.stretch } : {}), ...(f.unicodeRange ? { unicodeRange: f.unicodeRange } : {}),
     });
     document.fonts.add(face);
-    face.loaded.catch(() => onError(f.url));
+    face.loaded.catch(() => {
+      if (registry.get(family) !== entry) return; // released meanwhile
+      entry.failed.push(f.url);
+      for (const listener of [...entry.listeners]) listener(f.url);
+    });
     return face;
   });
-  registry.set(family, { count: 1, faces });
   return family;
 }
 
 /** Releases one reference; the faces are deleted only when no root uses the family. */
-export function releaseFaceSet(family: string): void {
+export function releaseFaceSet(family: string, onError?: ErrorListener): void {
   const entry = registry.get(family);
   if (!entry) return;
+  if (onError) { const i = entry.listeners.indexOf(onError); if (i >= 0) entry.listeners.splice(i, 1); }
   entry.count--;
   if (entry.count > 0) return;
   for (const face of entry.faces) document.fonts.delete(face);

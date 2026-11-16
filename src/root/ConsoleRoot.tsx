@@ -81,33 +81,47 @@ export function ConsoleRoot({ children, mode: controlled, defaultMode = "system"
   // Fonts: register the new face sets first, switch, then release the previous ones.
   const fontKey = JSON.stringify(normalized.fonts);
   const [families, setFamilies] = useState<Partial<Record<FontRole, string>>>({});
-  const held = useRef<string[]>([]);
+  // Internal families whose files failed to load: their roles fall back to the defaults (§7, R3).
+  const [failed, setFailed] = useState<ReadonlySet<string>>(() => new Set());
+  const held = useRef<[string, (url: string) => void][]>([]);
   useLayoutEffect(() => {
     const next: Partial<Record<FontRole, string>> = {};
-    const acquired: string[] = [];
+    const acquired: [string, (url: string) => void][] = [];
     for (const [role, setting] of Object.entries(normalized.fonts) as [FontRole, (typeof normalized.fonts)[FontRole]][]) {
       if (!setting) continue;
       if (setting.files?.length) {
-        const fam = acquireFaceSet(setting.files, (url) => report.current({ key: `fonts.${role}`, message: `font file failed to load: ${url}` }));
-        acquired.push(fam); next[role] = fam;
+        const files = setting.files;
+        let fam = "";
+        const onError = (url: string) => {
+          const index = files.findIndex((f) => f.url === url);
+          report.current({ key: `fonts.${role}.files[${index}].src`, message: `font file failed to load: ${url}; the default ${role} font is used` });
+          setFailed((s) => (s.has(fam) ? s : new Set(s).add(fam)));
+        };
+        fam = acquireFaceSet(files, onError);
+        acquired.push([fam, onError]); next[role] = fam;
       } else next[role] = setting.family; // an installed or host-loaded font, global by the consumer's choice
     }
     const previous = held.current;
     held.current = acquired;
     setFamilies(next);
-    for (const fam of previous) releaseFaceSet(fam);
+    for (const [fam, onError] of previous) releaseFaceSet(fam, onError);
+    setFailed((s) => { const keep = new Set([...s].filter((f) => acquired.some(([a]) => a === f))); return keep.size === s.size ? s : keep; });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fontKey]);
-  useEffect(() => () => { for (const fam of held.current) releaseFaceSet(fam); held.current = []; }, []);
+  useEffect(() => () => { for (const [fam, onError] of held.current) releaseFaceSet(fam, onError); held.current = []; }, []);
 
   const vars = useMemo(() => {
     const v: Record<string, string> = {};
     for (const [role, value] of Object.entries(normalized.colors[resolvedMode])) v[`--wl-${role}`] = value as string;
-    for (const [role, fam] of Object.entries(families) as [FontRole, string][]) v[FONT_VARS[role].name] = `${quote(fam)}, ${FONT_VARS[role].fallback}`;
+    for (const [role, fam] of Object.entries(families) as [FontRole, string][]) {
+      if (failed.has(fam)) continue; // the role keeps its default
+      v[FONT_VARS[role].name] = `${quote(fam)}, ${FONT_VARS[role].fallback}`;
+    }
     return v;
-  }, [normalized, resolvedMode, families]);
+  }, [normalized, resolvedMode, families, failed]);
 
-  const ctx = useMemo(() => ({ mode, resolvedMode, setMode, logo: normalized.logo, rootRef }), [mode, resolvedMode, setMode, normalized.logo]);
+  const reportStable = useCallback((d: Diagnostic) => report.current(d), []);
+  const ctx = useMemo(() => ({ mode, resolvedMode, setMode, logo: normalized.logo, rootRef, report: reportStable }), [mode, resolvedMode, setMode, normalized.logo, reportStable]);
   return (
     <ConsoleContext.Provider value={ctx}>
       <IconSetProvider value={icons ?? {}}>
