@@ -1,0 +1,16 @@
+/* Host styles of the parity fixture (candidate side). Not part of the Console package.
+ *  - The host page has no margin and the Console root fills the viewport, as <body> does in the
+ *    frontend baseline (where the theme colours the body). Original.
+ *  - Utilities used by the registration slot content that the frontend's RegistrationShell
+ *    hard-codes (brand square, editorial heading). A consuming app supplies its own content and
+ *    styles; these rules are copied from the Tailwind CSS 4.1.16 output of the frontend baseline
+ *    build (MIT, Tailwind Labs), with theme variables resolved. */
+body { margin: 0; }
+#app > [data-wds="console"] { min-height: 100vh; }
+@layer wds-fixture-utilities {
+  [data-wds="console"] .font-bold { font-weight: 700; }
+  [data-wds="console"] .leading-tight { --fx-leading: 1.25; line-height: 1.25; }
+  [data-wds="console"] .no-underline { text-decoration-line: none; }
+  [data-wds="console"] .place-content-center { place-content: center; }
+  [data-wds="console"] .text-4xl { font-size: 2.25rem; line-height: var(--fx-leading, calc(2.5 / 2.25)); }
+}

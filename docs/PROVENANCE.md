@@ -31,6 +31,7 @@ Console was extracted for [#1](https://github.com/WakoLab-DesignSystems/wakolab-
 | Destination | Source | Kind | Changes |
 |---|---|---|---|
 | `src/compositions/index.tsx` | `web/src/features/catalog/compositions/shells.tsx`, `shared.tsx`, `ConsoleHome.tsx`, `projects.tsx`; `web/src/features/catalog/pages.tsx` | Adapted | ConsoleHeader, ConsoleShell, Page, CollectionLayout/Section/Table, RowContent, DetailLayout/Section/Body, Panel, FormPage, MessagePage: same DOM, classes and order; content through slots and props |
+| `src/compositions/registration.tsx` | `web/src/features/RegistrationShell.tsx` | Adapted (review S1 on #5) | RegistrationFrame: the content-free two-column frame (page heading, layout, editorial side, workspace with form column, status area, footnote) with the same DOM, classes and order; brand, appearance and language controls, editorial texts, flow logic and i18n are slots or stay in the frontend; `data-surface="dark"` (Folio only) dropped |
 | `src/root/keyboard.ts` | `web/src/features/catalog/compositions/ConsoleHome.tsx` lines 30–45 | Adapted | `useCollectionKeys`: listener on the Console root by default; `scope: "page"` option; ignored while a modal dialog is open (N2) |
 | `src/root/ConsoleRoot.tsx`, `context.ts` | Replace `web/src/theme/ThemeProvider.tsx` | Original | Root element `data-wds="console"` and `data-mode`; nothing written to `<html>` or `<body>`; optional persistence only with `storageKey`; configuration applied on the root |
 | `src/root/config.ts`, `fonts.ts` | Standard CONFIGURATION and EXTRACTION_MATRIX §4 (R2) | Original | Configuration normalization with structural diagnostics only; internal font families per face set with reference counting |
@@ -40,10 +41,11 @@ Console was extracted for [#1](https://github.com/WakoLab-DesignSystems/wakolab-
 
 | Destination | Source | Kind | Changes |
 |---|---|---|---|
-| `tokens.css` | `design-system/themes.css` lines 2–80 (Console blocks) and the `:root` block of `design-system/theme.css` | Copied | Selector `[data-direction="console"]` → `[data-wds="console"]`; WakoLab `--wl-agent*` roles removed; default fonts renamed to internal aliases; `--wl-action-pressed` and `--wl-font-code` added (defaults follow action-hover and the ui font) |
+| `tokens.css` | `design-system/themes.css` lines 2–80 (Console blocks) and the `:root` block of `design-system/theme.css` | Copied | Selector `[data-direction="console"]` → `[data-wds="console"]`; WakoLab `--wl-agent*` roles removed; default fonts renamed to internal aliases; `--wl-action-pressed` added (default: the effective action-hover); `--wl-font-display` written out as its own default stack instead of `var(--wl-font-ui)`, and `--wl-font-code` added with the stack the source hard-coded on `.wl-kbd`, so that each font role keeps its own default (review R2 on #5) |
 | `theme.css` | `design-system/theme.css` | Copied | Imports moved to `console.css`; Folio literals, `--color-agent*` and the `[data-surface="dark"]` rule removed; `--color-brand-active` → `--wl-action-pressed` |
 | `base.css` | `web/src/style.css` (base layer) | Copied | Font package imports replaced by the build's aliases |
 | `console-parts.css` | `design-system/catalog.css` | Copied | Product and Folio/Marquee rules removed (source lines listed in the file); `.wl-kbd` uses `var(--wl-font-code)` |
+| `registration.css` | `design-system/compositions.css` lines 2–28, 45–54, 98–100, 131–143 | Copied | Frame rules of RegistrationFrame; `[data-direction="console"]` prefixes dropped (the build scopes to the root); profile-page and Folio/Marquee rules not copied (review S1 on #5) |
 | `global-rules.css` | `design-system/compositions.css` | Copied | Reduced-motion rule and Chinese/Hindi heading rules only |
 | `root.css` | — | Original | Logo slot rules |
 | `console.css` | Composition of `web/src/style.css` | Adapted | Entry for the build |
@@ -53,11 +55,11 @@ The build (`scripts/build.mjs`, original) prefixes every selector with the Conso
 ## Not extracted
 
 - **Product content** that the frontend composes into Console's slots (EXTRACTION_MATRIX §6): JoinPanel, Access, membership, repositories, tools, rewards, registration and profile content, catalog contracts, API ports, i18n catalogs, the appearance preference key, the `agent`/`human` identity colours, the prototype and product tests.
-- **Registration two-column layout** (`registration-layout`): product page layout, left in the frontend.
+- **Registration content and flow**: the frame is extracted (RegistrationFrame, above); the registration screens, texts, brand, appearance and language controls and the flow logic stay in the frontend.
 - **Appearance, language and account menus** as product components: only their trigger markup (ToolButton) and the mode part (ModeMenu) are extracted; theme lists, locales and account logic stay in the frontend.
 - **The cross-direction review gallery** and its CSS.
 - **Icon artwork** (E4): blocked until its provenance is resolved.
 
 ## Examples and checks (original)
 
-`examples/neutral` (neutral demonstration), `examples/harness` (test harness), `examples/parity` (parity candidate; its synthetic texts in `examples/parity/fixtures.ts` are copied from what the frontend prototype renders, with their source noted in the file), `tests/*.spec.ts`, `scripts/check-dist.mjs`, `scripts/theme-tokens.mjs` (contrast check adapted from the frontend's token check), `scripts/external-consumer.mjs`, `scripts/parity.mjs`.
+`examples/neutral` (neutral demonstration), `examples/harness` (test harness), `examples/parity` (parity candidate; its synthetic texts in `examples/parity/fixtures.ts` are copied from what the frontend prototype renders, with their source noted in the file), `examples/parity/fixture` (one parity fixture for a form, the components, a confirmation dialog and the registration frame, rendered with Console or, through `examples/parity/front-baseline`, with the frontend's own modules from a separate read-only checkout; `fixture.css` holds host rules and Tailwind utilities copied from the baseline build for slot content), `tests/*.spec.ts`, `scripts/check-dist.mjs`, `scripts/theme-tokens.mjs` (contrast check adapted from the frontend's token check), `scripts/check-artwork.mjs` (with `scripts/excluded-icon-hashes.json`: one-way hashes of the excluded icon path data, not the data), `scripts/external-consumer.mjs`, `scripts/parity.mjs`.

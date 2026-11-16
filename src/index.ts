@@ -9,6 +9,7 @@ export { KeyValueList, MessageBlock, BackLink, LoadingState, ProblemState } from
 export { LogoSlot, ToolButton, ModeMenu } from "./parts/shell";
 export { ConsoleHeader, ConsoleShell, Page, CollectionLayout, CollectionSection, CollectionTable, RowContent, CollectionKeys, useListRef,
   DetailLayout, DetailSection, DetailBody, Panel, FormPage, MessagePage, type ShellSearch } from "./compositions";
+export { RegistrationFrame } from "./compositions/registration";
 export { ConsoleRoot, type ConsoleRootProps } from "./root/ConsoleRoot";
 export { useConsole, type Mode, type ResolvedMode } from "./root/context";
 export { useCollectionKeys } from "./root/keyboard";

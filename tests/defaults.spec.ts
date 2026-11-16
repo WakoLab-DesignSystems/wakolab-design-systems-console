@@ -116,3 +116,20 @@ test("icons: rendered icon slots carry no path data and are marked missing (pack
   expect(r.missing).toBe(r.svgs);
   expect(r.paths).toBe(0);
 });
+
+// Review S1 on #5: the registration frame, and the fixture's real form and component sheet, with
+// Console only (no frontend modules): axe A/AA and reflow, light and dark. Icon slots stay empty here.
+for (const mode of ["light", "dark"])
+  test(`${mode}: registration frame, form and component fixtures are axe A/AA clean and reflow from 320px`, async ({ page }) => {
+    for (const screen of ["registration", "form", "components"]) {
+      await page.setViewportSize({ width: 1280, height: 900 });
+      await page.goto(`/parity/fixture/index.html?screen=${screen}&mode=${mode}`);
+      await expect(page.locator(`[data-wds="console"][data-mode="${mode}"]`)).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      expect(await axe(page), screen).toEqual([]);
+      for (const width of [320, 768, 1440]) {
+        await page.setViewportSize({ width, height: 900 });
+        expect(await noOverflow(page), `${screen} overflow at ${width}`).toBe(true);
+      }
+    }
+  });

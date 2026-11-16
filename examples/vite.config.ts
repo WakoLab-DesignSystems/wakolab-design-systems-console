@@ -31,10 +31,11 @@ export default defineConfig({
     alias: [
       { find: /^wakolab-design-systems-console\/console\.css$/, replacement: resolve(dist, "console.css") },
       { find: /^wakolab-design-systems-console$/, replacement: resolve(dist, "index.js") },
+      { find: /^parity-sys$/, replacement: resolve(root, "parity/fixture/console-sys.tsx") },
     ],
   },
   server: { host: "127.0.0.1", port: 5190, strictPort: true, fs: { allow: [resolve(__dirname, "..")] } },
   preview: { host: "127.0.0.1", port: 5190, strictPort: true },
   build: { outDir: resolve(__dirname, "../.example-dist"), emptyOutDir: true,
-    rollupOptions: { input: { neutral: resolve(root, "neutral/index.html"), harness: resolve(root, "harness/index.html"), parity: resolve(root, "parity/index.html") } } },
+    rollupOptions: { input: { neutral: resolve(root, "neutral/index.html"), harness: resolve(root, "harness/index.html"), parity: resolve(root, "parity/index.html"), fixture: resolve(root, "parity/fixture/index.html") } } },
 });
