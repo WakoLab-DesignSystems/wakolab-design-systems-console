@@ -104,7 +104,7 @@ async function serveAndCheck(name, app) {
     await page.waitForTimeout(300);
     const read = (id, n) => page.evaluate(([i, p]) => getComputedStyle(document.getElementById("root-" + i)).getPropertyValue(p).trim(), [id, n]);
     for (const [role, value] of Object.entries(config.colors.light)) if ((await read("a", `--wl-${role}`)) !== value) throw new Error(`${name}: light ${role}`);
-    if ((await read("a", "--wl-focus")) !== defaults.colors.light.focus) throw new Error(`${name}: omitted role`);
+    if ((await read("a", "--wl-danger")) !== defaults.colors.light.danger || (await read("a", "--wl-surface")) !== defaults.colors.light.surface) throw new Error(`${name}: omitted roles`);
     if ((await read("b", "--wl-action")) !== defaults.colors.dark.action) throw new Error(`${name}: unconfigured root`);
     const fam = await page.evaluate(() => getComputedStyle(document.getElementById("a-title")).fontFamily);
     if (!/^"?wds-console-font-[0-9a-f]{8}/.test(fam)) throw new Error(`${name}: configured font not used (${fam})`);
