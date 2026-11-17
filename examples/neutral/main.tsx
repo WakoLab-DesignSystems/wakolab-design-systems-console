@@ -3,7 +3,7 @@
 // examples/vite.config.ts), like an external project would.
 // Query parameters: screen=collection|detail|form|message|states|components, mode=light|dark|system,
 // config=example (loads /design/design-config.json with assetBase "/design/").
-// Navigation: the header's "Screen" menu (a Console Popover and ToolButton) lists the six screens as
+// Navigation: the header's "Screen" menu (a Console Popover and Button) lists the six screens as
 // links. Same-page link clicks update the query with history.pushState, so the root, its mode and the
 // loaded configuration persist; the mode is mirrored into `mode=` and every example link keeps `mode=`
 // and `config=`, so reloads, new tabs, the back button and direct links give the same screen and choices.
@@ -55,12 +55,17 @@ const ITEMS = [
   { id: "long-title", name: "A deliberately long dataset title that wraps on narrow screens without hiding any word", summary: "A long summary to check wrapping and truncation in the dense rows.", cat: "science/climate", path: "Science › Climate", access: "Public data", editing: "Open to edits" },
 ];
 
-/** Header menu listing the six example screens as links; the active one carries aria-current="page". */
+/** Header menu listing the six example screens as links; the active one carries aria-current="page".
+ *  The trigger always shows "Screen:" and the active screen, at every width. */
 function ScreenMenu() {
   const { screen, href } = useNav();
   const active = SCREENS.find((s) => s.id === screen)!;
   return (
-    <Popover label="Example screens" align="start" trigger={(p) => <ToolButton {...p} id="screen-menu" icon="list" label="Screen" value={active.label} compact />}>
+    // A Console Button, not a ToolButton: below 40rem Console makes header tools icon-only, and the example
+    // ships no icon artwork, so a ToolButton would be an empty box. The Button keeps "Screen" visible.
+    <Popover label="Example screens" align="start" trigger={(p) => (
+      <Button {...p} id="screen-menu" variant="secondary">Screen: {active.label}</Button>
+    )}>
       {(close) => (
         <nav aria-label="Example screens">
           <ul className="ex-menu">
@@ -311,10 +316,12 @@ function App() {
   }, []);
   // Each screen keeps its own state; a new screen (or item or state) starts at the top with focus on its heading.
   const screenKey = [nav.screen, nav.params.get("id") ?? "", nav.params.get("state") ?? ""].join("|");
-  const first = useRef(true);
+  // The last screen given focus; repeated effect runs (React StrictMode) never move focus on first load.
+  const shown = useRef(screenKey);
   useEffect(() => {
     document.title = `${SCREENS.find((s) => s.id === nav.screen)!.label} · Console example`;
-    if (first.current) { first.current = false; return; }
+    if (shown.current === screenKey) return;
+    shown.current = screenKey;
     window.scrollTo(0, 0);
     const heading = document.querySelector<HTMLElement>(".ex-root h1");
     if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); }
