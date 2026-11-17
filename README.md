@@ -94,8 +94,16 @@ A name without a path renders an empty box of the same size, marked `data-icon-m
 npm run build && npm run example
 ```
 
-- `http://127.0.0.1:5190/neutral/`: a neutral demonstration; `?screen=` selects `collection`, `detail`, `form`, `message`, `states` or `components`; add `?config=example` to load `examples/public/design/design-config.json` with its own font and logo, and `?mode=dark` for dark mode.
+- `http://127.0.0.1:5190/neutral/`: a neutral demonstration. The header's **Screen** menu opens the six screens (collection, detail, form, message, states, components) and marks the active one. The chosen mode and configuration are kept when you navigate, reload or go back. Direct links still work: `?screen=` selects a screen; add `?config=example` to load `examples/public/design/design-config.json` with its own font and logo, and `?mode=dark` for dark mode.
 - `http://127.0.0.1:5190/harness/`: the test harness. `http://127.0.0.1:5190/parity/`: the parity candidate.
+
+**Without Node.js (Docker, including on Windows):** this command clones a branch into a temporary Node 24 container, installs and builds it there, and serves the examples. Replace `dev` with another branch name if needed. It works unchanged in PowerShell and in the Command Prompt.
+
+```bash
+docker run --rm -it -p 5190:5190 node:24-bookworm sh -c "git clone --depth 1 --branch dev https://github.com/WakoLab-DesignSystems/wakolab-design-systems-console.git /app && cd /app && npm ci && npx vite --config examples/vite.config.ts --host 0.0.0.0"
+```
+
+Then open `http://localhost:5190/neutral/`. Stop with Ctrl+C; the container and its files are removed.
 
 ## Checks
 

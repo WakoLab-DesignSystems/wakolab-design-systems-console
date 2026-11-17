@@ -9,3 +9,8 @@ html, body { margin: 0; }
 .ex-cover { width: 10rem; flex-shrink: 0; }
 .ex-stack { display: grid; flex: 1; gap: 8px; }
 .ex-left { text-align: left; }
+/* Screen menu of the example (links styled with Console's option rows). */
+.ex-menu { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.ex-menu-link { text-decoration: none; }
+.ex-menu-link[aria-current="page"] { background: var(--wl-surface-2); font-weight: 700; }
+.ex-menu-mark { display: inline-block; width: 1ch; }

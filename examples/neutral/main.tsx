@@ -3,9 +3,13 @@
 // examples/vite.config.ts), like an external project would.
 // Query parameters: screen=collection|detail|form|message|states|components, mode=light|dark|system,
 // config=example (loads /design/design-config.json with assetBase "/design/").
+// Navigation: the header's "Screen" menu (a Console Popover and ToolButton) lists the six screens as
+// links. Same-page link clicks update the query with history.pushState, so the root, its mode and the
+// loaded configuration persist; the mode is mirrored into `mode=` and every example link keeps `mode=`
+// and `config=`, so reloads, new tabs, the back button and direct links give the same screen and choices.
 import "wakolab-design-systems-console/console.css";
 import "./example.css";
-import { StrictMode, useEffect, useRef, useState } from "react";
+import { createContext, StrictMode, useContext, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   Alert, Badge, BackLink, Button, Card, Checkbox, ChoiceGroup, CodeField, CollectionKeys, CollectionLayout, CollectionSection,
@@ -15,9 +19,28 @@ import {
   Tabs, TextField, Toast, ToggleChip, ToolButton, type DesignConfig, type FilterItem, type IconSet, type Mode,
 } from "wakolab-design-systems-console";
 
-const params = new URLSearchParams(location.search);
 type Screen = "collection" | "detail" | "form" | "message" | "states" | "components";
-const screen = (params.get("screen") as Screen) || "collection";
+const SCREENS: { id: Screen; label: string }[] = [
+  { id: "collection", label: "Collection" }, { id: "detail", label: "Detail" }, { id: "form", label: "Form" },
+  { id: "message", label: "Message" }, { id: "states", label: "States" }, { id: "components", label: "Components" },
+];
+const MODES: Mode[] = ["light", "dark", "system"];
+
+/** The current query, the active screen and a link builder that keeps the chosen mode and configuration. */
+interface Nav { params: URLSearchParams; screen: Screen; href: (screen: Screen, extra?: Record<string, string>) => string }
+const NavContext = createContext<Nav | null>(null);
+const useNav = () => useContext(NavContext)!;
+function readNav(search: string): Nav {
+  const params = new URLSearchParams(search);
+  const requested = params.get("screen");
+  const screen = SCREENS.find((s) => s.id === requested)?.id ?? "collection";
+  const href = (to: Screen, extra: Record<string, string> = {}) => {
+    const next = new URLSearchParams({ screen: to, ...extra });
+    for (const key of ["mode", "config"]) { const value = params.get(key); if (value) next.set(key, value); }
+    return `?${next}`;
+  };
+  return { params, screen, href };
+}
 
 const CATEGORIES: FilterItem[] = [
   { id: "science", label: "Science", children: [{ id: "science/climate", label: "Climate" }, { id: "science/biology", label: "Biology" }] },
@@ -32,13 +55,38 @@ const ITEMS = [
   { id: "long-title", name: "A deliberately long dataset title that wraps on narrow screens without hiding any word", summary: "A long summary to check wrapping and truncation in the dense rows.", cat: "science/climate", path: "Science › Climate", access: "Public data", editing: "Open to edits" },
 ];
 
+/** Header menu listing the six example screens as links; the active one carries aria-current="page". */
+function ScreenMenu() {
+  const { screen, href } = useNav();
+  const active = SCREENS.find((s) => s.id === screen)!;
+  return (
+    <Popover label="Example screens" align="start" trigger={(p) => <ToolButton {...p} id="screen-menu" icon="list" label="Screen" value={active.label} compact />}>
+      {(close) => (
+        <nav aria-label="Example screens">
+          <ul className="ex-menu">
+            {SCREENS.map((s) => (
+              <li key={s.id}>
+                <a href={href(s.id)} className="wl-option ex-menu-link" aria-current={s.id === screen ? "page" : undefined} onClick={close}>
+                  <span aria-hidden="true" className="wl-prompt ex-menu-mark">{s.id === screen ? "›" : ""}</span>{s.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
+    </Popover>
+  );
+}
+
 function Header({ searchRef, query, setQuery }: { searchRef?: React.RefObject<HTMLInputElement | null>; query: string; setQuery: (q: string) => void }) {
+  const { href } = useNav();
   return (
     <ConsoleHeader
-      logo={<LogoSlot label="Field Lab" accessibleName="Field Lab, home" href="?screen=collection" />}
+      logo={<LogoSlot label="Field Lab" accessibleName="Field Lab, home" href={href("collection")} />}
       searchRef={searchRef}
       search={{ label: "Search datasets", placeholder: "Dataset name or summary", clearLabel: "Clear search", value: query, onChange: setQuery }}
       tools={<>
+        <ScreenMenu />
         <ModeMenu compact label="Appearance" modeLabel="Mode" labels={{ light: "Light", dark: "Dark", system: "System" }} />
         <ToolButton icon="globe" label="Language" value="English" compact valueLang="en" />
         <Button id="sign-in" className="wl-signin">Sign in</Button>
@@ -48,6 +96,7 @@ function Header({ searchRef, query, setQuery }: { searchRef?: React.RefObject<HT
 }
 
 function CollectionScreen() {
+  const { params, href } = useNav();
   const searchRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const [query, setQuery] = useState("");
@@ -74,7 +123,7 @@ function CollectionScreen() {
             <CollectionTable columns={["Name", "Category", "Access", "Editing"]} listRef={listRef}>
               {items.map((i, n) => (
                 <li key={i.id}>
-                  <ItemLink href={`?screen=detail&id=${i.id}`} itemId={i.id} className="wl-row">
+                  <ItemLink href={href("detail", { id: i.id })} itemId={i.id} className="wl-row">
                     <RowContent title={i.name} summary={i.summary} summaryLang="en" index={n}
                       second={<span className="wl-path">{i.path}</span>}
                       third={<span className="wl-meta">{i.access}</span>}
@@ -92,6 +141,7 @@ function CollectionScreen() {
 }
 
 function DetailScreen() {
+  const { params, href } = useNav();
   const item = ITEMS.find((i) => i.id === params.get("id")) ?? ITEMS[0];
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<"about" | "files">("about");
@@ -99,7 +149,7 @@ function DetailScreen() {
   const [toast, setToast] = useState<string>();
   return (
     <ConsoleShell header={<Header query={query} setQuery={setQuery} />}>
-      <DetailLayout back={<BackLink href="?screen=collection" label="Back to datasets" />} path={`datasets / ${item.id}`} title={item.name} lead={item.summary} leadLang="en"
+      <DetailLayout back={<BackLink href={href("collection")} label="Back to datasets" />} path={`datasets / ${item.id}`} title={item.name} lead={item.summary} leadLang="en"
         side={<>
           <Panel>
             <p className="wl-meta-text">{item.editing}. Requests are answered by the maintainers.</p>
@@ -123,13 +173,14 @@ function DetailScreen() {
 }
 
 function FormScreen() {
+  const { href } = useNav();
   const [query, setQuery] = useState("");
   const [name, setName] = useState("fl");
   const [error, setError] = useState<string>();
   const [view, setView] = useState("rows");
   return (
     <ConsoleShell header={<Header query={query} setQuery={setQuery} />}>
-      <FormPage back={<BackLink href="?screen=collection" label="Back to datasets" />} title="Settings" lead="Synthetic settings form. Nothing is saved.">
+      <FormPage back={<BackLink href={href("collection")} label="Back to datasets" />} title="Settings" lead="Synthetic settings form. Nothing is saved.">
         <form noValidate className="wl-form" onSubmit={(e) => { e.preventDefault(); setError(name.trim().length < 3 ? "Use at least 3 characters." : undefined); }}>
           <TextField id="team" label="Team name" required value={name} onChange={(e) => setName(e.target.value)} error={error} hint="Shown on shared datasets." />
           <TextField id="email" label="Email" value="team@example.test" readOnly />
@@ -235,18 +286,63 @@ function ComponentsScreen() {
 const screens: Record<Screen, () => React.ReactElement> = { collection: CollectionScreen, detail: DetailScreen, form: FormScreen, message: MessageScreen, states: StatesScreen, components: ComponentsScreen };
 
 function App() {
+  const [search, setSearch] = useState(location.search);
+  const nav = readNav(search);
+  const go = (next: string, how: "push" | "replace") => {
+    history[how === "push" ? "pushState" : "replaceState"](null, "", next + location.hash);
+    setSearch(next === "?" ? "" : next);
+  };
+  // Same-page links (menu, logo, rows, back links) navigate without reloading; anything else, and
+  // modified clicks (new tab or window), keep the browser's default behaviour.
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const link = (e.target as Element | null)?.closest?.("a[href]") as HTMLAnchorElement | null;
+      if (!link || (link.target && link.target !== "_self") || link.hasAttribute("download")) return;
+      const url = new URL(link.href, location.href);
+      if (url.origin !== location.origin || url.pathname !== location.pathname || url.search === location.search) return;
+      e.preventDefault();
+      go(url.search, "push");
+    };
+    const onPop = () => setSearch(location.search);
+    document.addEventListener("click", onClick);
+    window.addEventListener("popstate", onPop);
+    return () => { document.removeEventListener("click", onClick); window.removeEventListener("popstate", onPop); };
+  }, []);
+  // Each screen keeps its own state; a new screen (or item or state) starts at the top with focus on its heading.
+  const screenKey = [nav.screen, nav.params.get("id") ?? "", nav.params.get("state") ?? ""].join("|");
+  const first = useRef(true);
+  useEffect(() => {
+    document.title = `${SCREENS.find((s) => s.id === nav.screen)!.label} · Console example`;
+    if (first.current) { first.current = false; return; }
+    window.scrollTo(0, 0);
+    const heading = document.querySelector<HTMLElement>(".ex-root h1");
+    if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); }
+  }, [screenKey]);
+
+  const wantsConfig = nav.params.get("config") === "example";
   const [config, setConfig] = useState<DesignConfig | undefined>();
   useEffect(() => {
-    if (params.get("config") !== "example") return;
+    if (!wantsConfig) { setConfig(undefined); return; }
     fetch("/design/design-config.json").then((r) => r.json()).then(setConfig);
-  }, []);
-  const Screen = screens[screen] ?? CollectionScreen;
+  }, [wantsConfig]);
+  // The mode is controlled by the query, so a link, a reload or the back button gives the same mode.
+  const requested = nav.params.get("mode") as Mode | null;
+  const mode: Mode = requested && MODES.includes(requested) ? requested : "system";
+  const setMode = (next: Mode) => {
+    const query = new URLSearchParams(location.search);
+    if (next === "system") query.delete("mode"); else query.set("mode", next);
+    go(`?${query}`, "replace");
+  };
+  const Screen = screens[nav.screen];
   // Test-only hook: icon path data can be injected by a test harness (no icon artwork ships here).
   const icons = (window as unknown as { __CONSOLE_ICONS__?: IconSet }).__CONSOLE_ICONS__;
   return (
-    <ConsoleRoot defaultMode={(params.get("mode") as Mode) || "system"} config={config} assetBase="/design/" icons={icons} className="ex-root">
-      <Screen />
-    </ConsoleRoot>
+    <NavContext.Provider value={nav}>
+      <ConsoleRoot mode={mode} onModeChange={setMode} config={config} assetBase="/design/" icons={icons} className="ex-root">
+        <Screen key={screenKey} />
+      </ConsoleRoot>
+    </NavContext.Provider>
   );
 }
 
