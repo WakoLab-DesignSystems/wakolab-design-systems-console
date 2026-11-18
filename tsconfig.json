@@ -19,6 +19,9 @@
     "paths": {
       "parity-sys": [
         "./examples/parity/fixture/console-sys.tsx"
+      ],
+      "console-example-env": [
+        "./examples/neutral/env/http.ts"
       ]
     }
   },

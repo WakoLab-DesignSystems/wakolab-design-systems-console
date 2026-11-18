@@ -1,0 +1,30 @@
+{
+  "system": "console",
+  "name": "Console",
+  "version": "0.1.0",
+  "standard": {
+    "repository": "https://github.com/WakoLab-DesignSystems/wakolab-design-systems-standard",
+    "commit": "8e3b818ece8dbb57f48a2dc779ee743fe441aba4"
+  },
+  "entryPoints": {
+    "readme": "README.md",
+    "agents": "AGENTS.md",
+    "rules": "docs/rules/README.md",
+    "configDefaults": "config.default.json",
+    "configSchema": "config.schema.json",
+    "configExample": "examples/public/design/design-config.json",
+    "demo": "examples/neutral/index.html",
+    "provenance": "docs/PROVENANCE.md",
+    "parity": "docs/PARITY.md",
+    "htmlFile": "console-kit.html"
+  },
+  "declaredRoles": [],
+  "deliverables": {
+    "htmlFile": "console-kit.html",
+    "docker": "not-delivered",
+    "figma": "not-delivered"
+  },
+  "platforms": {
+    "web": "React 19.2 components with a prebuilt, root-scoped stylesheet (dist/console.css)"
+  }
+}

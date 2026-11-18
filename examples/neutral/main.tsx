@@ -1,15 +1,32 @@
 // Neutral Console example with synthetic data. Original code.
 // It imports the BUILT package ("wakolab-design-systems-console" is aliased to dist/ by
 // examples/vite.config.ts), like an external project would.
-// Query parameters: screen=collection|detail|form|message|states|components, mode=light|dark|system,
-// config=example (loads /design/design-config.json with assetBase "/design/").
+// Query parameters: screen=overview|collection|detail|form|message|states|components (default: collection),
+// mode=light|dark|system, config=example|local (example: the example configuration with its font and
+// logo; local: the design-config.json chosen on the Overview page, carried in local=<base64url>).
+// One source, two loading modes (standard DIRECTIONS §4 at 8e3b818, issue #8): `npm run example` serves
+// it over HTTP ("console-example-env" → env/http.ts: example read from /design/ with assetBase "/design/",
+// state in the query string as integrated in #7); scripts/build-html.mjs builds the same source into
+// the single offline file console-kit.html (env/offline.ts: everything embedded, the same parameters in
+// the URL hash). Font and logo files chosen from the disk stay in memory while the page is open and must
+// be selected again after a reload.
 // Navigation: the header's "Screen" menu (a Console Popover and Button) lists the six screens as
 // links. Same-page link clicks update the query with history.pushState, so the root, its mode and the
 // loaded configuration persist; the mode is mirrored into `mode=` and every example link keeps `mode=`
 // and `config=`, so reloads, new tabs, the back button and direct links give the same screen and choices.
 import "wakolab-design-systems-console/console.css";
 import "./example.css";
-import { createContext, StrictMode, useContext, useEffect, useRef, useState } from "react";
+import { createContext, StrictMode, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { EXAMPLE_FILES, KIT, loadExample } from "console-example-env";
+import { decodeConfig, encodeConfig, fileName, namedFiles, withFiles } from "./env/shared";
+import licence from "../../LICENSE?raw";
+import notices from "../../THIRD_PARTY_NOTICES.md?raw";
+import monoLicence from "../../licenses/jetbrains-mono-OFL-1.1.txt?raw";
+import dmSansLicence from "../../licenses/dm-sans-OFL-1.1.txt?raw";
+import scLicence from "../../licenses/noto-sans-sc-OFL-1.1.txt?raw";
+import devanagariLicence from "../../licenses/noto-sans-devanagari-OFL-1.1.txt?raw";
+import tailwindLicence from "../../licenses/tailwindcss-MIT.txt?raw";
+import reactLicence from "../../licenses/react-MIT.txt?raw";
 import { createRoot } from "react-dom/client";
 import {
   Alert, Badge, BackLink, Button, Card, Checkbox, ChoiceGroup, CodeField, CollectionKeys, CollectionLayout, CollectionSection,
@@ -19,9 +36,11 @@ import {
   Tabs, TextField, Toast, ToggleChip, ToolButton, type DesignConfig, type FilterItem, type IconSet, type Mode,
 } from "wakolab-design-systems-console";
 
-type Screen = "collection" | "detail" | "form" | "message" | "states" | "components";
+type Screen = "overview" | "collection" | "detail" | "form" | "message" | "states" | "components";
+// The menu reaches the presentation page and every example screen (standard DIRECTIONS §2, issue #8).
+// Without `screen=`, the example still opens on the collection, as integrated in #7.
 const SCREENS: { id: Screen; label: string }[] = [
-  { id: "collection", label: "Collection" }, { id: "detail", label: "Detail" }, { id: "form", label: "Form" },
+  { id: "overview", label: "Overview" }, { id: "collection", label: "Collection" }, { id: "detail", label: "Detail" }, { id: "form", label: "Form" },
   { id: "message", label: "Message" }, { id: "states", label: "States" }, { id: "components", label: "Components" },
 ];
 const MODES: Mode[] = ["light", "dark", "system"];
@@ -30,17 +49,31 @@ const MODES: Mode[] = ["light", "dark", "system"];
 interface Nav { params: URLSearchParams; screen: Screen; href: (screen: Screen, extra?: Record<string, string>) => string }
 const NavContext = createContext<Nav | null>(null);
 const useNav = () => useContext(NavContext)!;
+/** The example's state as a query string ("?a=b"), read from the query (HTTP) or the hash (offline file). */
+const currentQuery = () => KIT.stateIn === "query" ? location.search : location.hash ? `?${location.hash.slice(1)}` : "";
+const queryOf = (url: URL) => KIT.stateIn === "query" ? url.search : url.hash ? `?${url.hash.slice(1)}` : "";
+/** The address part for a state: "?…" over HTTP, "#…" in the offline file. */
+const stateUrl = (query: string) => KIT.stateIn === "query" ? query : `#${query.replace(/^\?/, "")}`;
 function readNav(search: string): Nav {
   const params = new URLSearchParams(search);
   const requested = params.get("screen");
   const screen = SCREENS.find((s) => s.id === requested)?.id ?? "collection";
   const href = (to: Screen, extra: Record<string, string> = {}) => {
     const next = new URLSearchParams({ screen: to, ...extra });
-    for (const key of ["mode", "config"]) { const value = params.get(key); if (value) next.set(key, value); }
-    return `?${next}`;
+    for (const key of ["mode", "config", "local"]) { const value = params.get(key); if (value) next.set(key, value); }
+    return stateUrl(`?${next}`);
   };
   return { params, screen, href };
 }
+/** Font and logo files selected from the disk, by file name, as blob: URLs (memory only). */
+type LocalFiles = Map<string, { name: string; url: string }>;
+interface Kit { files: LocalFiles; addFiles: (list: FileList) => void; problem?: string; setProblem: (p?: string) => void; setConfig: (query: Record<string, string | null>) => void }
+const KitContext = createContext<Kit | null>(null);
+const LICENCES: [string, string][] = [
+  ["Console (MIT): LICENSE", licence], ["Third-party notices", notices], ["JetBrains Mono (OFL-1.1)", monoLicence], ["DM Sans (OFL-1.1)", dmSansLicence],
+  ["Noto Sans SC (OFL-1.1)", scLicence], ["Noto Sans Devanagari (OFL-1.1)", devanagariLicence], ["Tailwind CSS (MIT)", tailwindLicence],
+  ["React, React DOM, Scheduler (MIT; in the HTML file only)", reactLicence],
+];
 
 const CATEGORIES: FilterItem[] = [
   { id: "science", label: "Science", children: [{ id: "science/climate", label: "Climate" }, { id: "science/biology", label: "Biology" }] },
@@ -114,6 +147,111 @@ function Header({ searchRef, query, setQuery }: { searchRef?: React.RefObject<HT
         <Button id="sign-in" className="wl-signin">Sign in</Button>
       </>}
     />
+  );
+}
+
+/** Presentation page: identity, foundations, configuration (shipped defaults, example, your own files),
+ *  how to reuse, kit status and licences. Built with Console's own components. */
+function OverviewScreen() {
+  const { params, href } = useNav();
+  const kit = useContext(KitContext)!;
+  const [query, setQuery] = useState("");
+  const config = params.get("config");
+  const swatch = (role: string) => <div key={role} className="ex-swatch"><span style={{ background: `var(--wl-${role})` }} /><code>{role}</code></div>;
+  return (
+    <ConsoleShell header={<Header query={query} setQuery={setQuery} />}>
+      <Page className="ex-grid">
+        <header className="ex-intro">
+          <p className="wl-path">Design system</p>
+          <h1>Console</h1>
+          <p className="wl-prose ex-lead">A terminal-inspired system for dense, keyboard-friendly tools: monospace interface type, rows of at least 44 px, a top bar with a filter rail from 64em, square geometry, flat surfaces and short 100 ms motion. Everything on this page is rendered with Console's own components.</p>
+          <p className="wl-meta-text">Use the <strong>Screen</strong> menu to open the six example screens: <a href={href("collection")}>collection</a>, <a href={href("detail")}>detail</a>, form, message, states and components. <strong>Appearance</strong> switches light and dark.</p>
+        </header>
+        <section className="ex-card" aria-labelledby="ov-config">
+          <h2 id="ov-config">Configuration</h2>
+          <p className="wl-meta-text">Values in a design-config.json are applied exactly as written; omitted roles keep Console's defaults. Choose the shipped defaults, the example configuration (colours, interface font and logo) or your own file.</p>
+          <div className="ex-row" role="group" aria-label="Configuration">
+            <ToggleChip pressed={!config} onClick={() => kit.setConfig({ config: null })}>Shipped defaults</ToggleChip>
+            <ToggleChip pressed={config === "example"} onClick={() => kit.setConfig({ config: "example" })}>Example configuration</ToggleChip>
+            {params.get("local") && <ToggleChip pressed={config === "local"} onClick={() => kit.setConfig({ config: "local" })}>Your configuration</ToggleChip>}
+          </div>
+          <LocalConfig />
+        </section>
+        <section className="ex-card" aria-labelledby="ov-colours">
+          <h2 id="ov-colours">Colour roles</h2>
+          <div className="ex-swatches">{["bg", "surface", "surface-2", "ink", "muted", "border", "control", "action", "action-hover", "link", "focus", "accent", "success", "warning", "danger", "info"].map(swatch)}</div>
+          <p className="wl-meta-text"><code>accent</code> marks the keyboard prompt and the focused row's marker. <code>link</code> and <code>focus</code> are their own roles: setting <code>action</code> does not change them.</p>
+        </section>
+        <section className="ex-card" aria-labelledby="ov-type">
+          <h2 id="ov-type">Typography</h2>
+          <p style={{ fontFamily: "var(--wl-font-ui)", fontSize: "1.5rem", fontWeight: 600 }}>Interface and display — JetBrains Mono</p>
+          <p className="wl-prose">Prose — DM Sans, for leads and long descriptions.</p>
+          <p><kbd className="wl-kbd">/</kbd> <kbd className="wl-kbd">j</kbd> <kbd className="wl-kbd">k</kbd> <span className="wl-meta-text">Key hints use the code role.</span></p>
+        </section>
+        <section className="ex-card" aria-labelledby="ov-use">
+          <h2 id="ov-use">Use it</h2>
+          <ul className="ex-list">
+            <li>Render every screen inside <code>ConsoleRoot</code> and import <code>wakolab-design-systems-console/console.css</code> once.</li>
+            <li>Pass your configuration as <code>config</code>, with <code>assetBase</code> for its relative paths.</li>
+            <li>Pass your own icon set: Console ships no icon artwork, so icon slots stay empty here.</li>
+            <li>See README.md, AGENTS.md and docs/rules/ in the repository.</li>
+          </ul>
+          <p className="wl-meta-text" id="kit-status">{KIT.offline
+            ? <>Offline file built from source <code>{KIT.sourceSha}</code>, standard <code>{KIT.standardSha.slice(0, 7)}</code>. Everything it needs is inside this file; it makes no network request.</>
+            : <>HTTP example (npm run example), standard <code>{KIT.standardSha.slice(0, 7)}</code>. The same example is also built as the single offline file console-kit.html.</>}
+            {" "}The maintained Docker start and the Figma companion are later kit targets, not delivered yet.</p>
+        </section>
+        <section className="ex-card" aria-labelledby="ov-licences">
+          <h2 id="ov-licences">Licences</h2>
+          <p className="wl-meta-text">Console's own code and documentation are MIT (LICENSE, below). The fonts, the Tailwind CSS output and, in the offline file, React keep their own licences:</p>
+          {LICENCES.map(([title, text]) => (
+            <details key={title} className="ex-licence"><summary>{title}</summary><pre className="ex-code">{text}</pre></details>
+          ))}
+        </section>
+      </Page>
+    </ConsoleShell>
+  );
+}
+
+/** Your own configuration: a design-config.json and the font and logo files it names, all chosen from
+ *  the disk. Nothing is uploaded: files are read in memory (blob: URLs) and matched by file name.
+ *  Copied from WakoLab-DesignSystems/wakolab-design-systems-folio at a45832769d41ec10c1c6e0dc6afa8f1c1061f99a,
+ *  examples/demo/main.tsx (LocalConfig); Console adaptation: state through the example's query/hash. */
+function LocalConfig() {
+  const { params } = useNav();
+  const kit = useContext(KitContext)!;
+  const encoded = params.get("local");
+  const local = useMemo(() => { try { return encoded ? decodeConfig(encoded) : undefined; } catch { return undefined; } }, [encoded]);
+  const named = local ? namedFiles(local) : [];
+  const onConfig = async (list: FileList | null) => {
+    const file = list?.[0];
+    if (!file) return;
+    try { kit.setConfig({ config: "local", local: encodeConfig(JSON.parse(await file.text())) }); kit.setProblem(undefined); }
+    catch (e) { kit.setProblem(`${file.name} is not a valid JSON file (${(e as Error).message}). Nothing was changed.`); }
+  };
+  return (
+    <div className="ex-local">
+      <h3>Your configuration</h3>
+      <p className="wl-meta-text">Choose a design-config.json, then the font and logo files it names. Files are matched by file name and stay on your computer.</p>
+      <div className="ex-row">
+        <label className="ex-file"><span>Configuration file</span>
+          <input id="local-config" type="file" accept=".json,application/json" onChange={(e) => { onConfig(e.currentTarget.files); e.currentTarget.value = ""; }} /></label>
+        <label className="ex-file"><span>Font and logo files</span>
+          <input id="local-files" type="file" multiple accept=".woff2,.woff,.ttf,.otf,.svg,.png,.jpg,.jpeg,.webp,.gif" onChange={(e) => { if (e.currentTarget.files) kit.addFiles(e.currentTarget.files); e.currentTarget.value = ""; }} /></label>
+      </div>
+      {kit.problem && <Alert tone="error">{kit.problem}</Alert>}
+      {named.length > 0 && (
+        <ul className="ex-list" id="local-file-status" aria-label="Files named by your configuration">
+          {named.map((path) => {
+            const hit = kit.files.get(fileName(path));
+            return <li key={path}><code>{path}</code>: {hit ? <>selected ({hit.name})</> : <strong>not selected yet</strong>}</li>;
+          })}
+        </ul>
+      )}
+      <p className="wl-meta-text">After a reload, the configuration values come back from the page address. The font and logo files must be selected again: until then, a font role without its file keeps Console's default and a missing logo shows the text logo.</p>
+      <p className="wl-meta-text">To start from the example, download its files:{" "}
+        {EXAMPLE_FILES.map((f, i) => <span key={f.path}>{i ? ", " : ""}<a href={f.url} download={fileName(f.path)}>{f.path}</a></span>)}.</p>
+    </div>
   );
 }
 
@@ -305,13 +443,15 @@ function ComponentsScreen() {
   );
 }
 
-const screens: Record<Screen, () => React.ReactElement> = { collection: CollectionScreen, detail: DetailScreen, form: FormScreen, message: MessageScreen, states: StatesScreen, components: ComponentsScreen };
+const screens: Record<Screen, () => React.ReactElement> = { overview: OverviewScreen, collection: CollectionScreen, detail: DetailScreen, form: FormScreen, message: MessageScreen, states: StatesScreen, components: ComponentsScreen };
 
 function App() {
-  const [search, setSearch] = useState(location.search);
+  const [search, setSearch] = useState(currentQuery);
   const nav = readNav(search);
+  // `next` is a query string ("?a=b"); it is written to the query (HTTP) or to the hash (offline file).
   const go = (next: string, how: "push" | "replace") => {
-    history[how === "push" ? "pushState" : "replaceState"](null, "", next + location.hash);
+    const url = KIT.stateIn === "query" ? next + location.hash : `${location.pathname}${location.search}${stateUrl(next)}`;
+    history[how === "push" ? "pushState" : "replaceState"](null, "", url);
     setSearch(next === "?" ? "" : next);
   };
   // Same-page links (menu, logo, rows, back links) navigate without reloading; anything else, and
@@ -322,14 +462,17 @@ function App() {
       const link = (e.target as Element | null)?.closest?.("a[href]") as HTMLAnchorElement | null;
       if (!link || (link.target && link.target !== "_self") || link.hasAttribute("download")) return;
       const url = new URL(link.href, location.href);
-      if (url.origin !== location.origin || url.pathname !== location.pathname || url.search === location.search) return;
+      if (url.origin !== location.origin || url.pathname !== location.pathname) return;
+      if (KIT.stateIn === "hash" && url.search !== location.search) return;
+      if (queryOf(url) === currentQuery()) return;
       e.preventDefault();
-      go(url.search, "push");
+      go(queryOf(url), "push");
     };
-    const onPop = () => setSearch(location.search);
+    const onPop = () => setSearch(currentQuery());
     document.addEventListener("click", onClick);
     window.addEventListener("popstate", onPop);
-    return () => { document.removeEventListener("click", onClick); window.removeEventListener("popstate", onPop); };
+    if (KIT.stateIn === "hash") window.addEventListener("hashchange", onPop);
+    return () => { document.removeEventListener("click", onClick); window.removeEventListener("popstate", onPop); window.removeEventListener("hashchange", onPop); };
   }, []);
   // Each screen keeps its own state; a new screen (or item or state) starts at the top with focus on its heading.
   const screenKey = [nav.screen, nav.params.get("id") ?? "", nav.params.get("state") ?? ""].join("|");
@@ -344,17 +487,42 @@ function App() {
     if (heading) { heading.tabIndex = -1; heading.focus({ preventScroll: true }); }
   }, [screenKey]);
 
-  const wantsConfig = nav.params.get("config") === "example";
-  const [config, setConfig] = useState<DesignConfig | undefined>();
+  const configChoice = nav.params.get("config");
+  const [example, setExample] = useState<{ config: DesignConfig; assetBase: string | undefined }>();
   useEffect(() => {
-    if (!wantsConfig) { setConfig(undefined); return; }
-    fetch("/design/design-config.json").then((r) => r.json()).then(setConfig);
-  }, [wantsConfig]);
+    if (configChoice !== "example" || example) return;
+    let live = true;
+    loadExample().then((e) => { if (live) setExample(e); });
+    return () => { live = false; };
+  }, [configChoice, example]);
+  // Your configuration: no assetBase, so a path without a selected file is reported and ignored (the
+  // role keeps its default) and nothing is requested from the disk or the network.
+  const [files, setFiles] = useState<LocalFiles>(() => new Map());
+  const [problem, setProblem] = useState<string>();
+  const encodedLocal = nav.params.get("local");
+  const local = useMemo(() => {
+    if (configChoice !== "local" || !encodedLocal) return undefined;
+    try { return withFiles(decodeConfig(encodedLocal), (path) => files.get(fileName(path))?.url).config; } catch { return undefined; }
+  }, [configChoice, encodedLocal, files]);
+  const applied = configChoice === "example" ? example : configChoice === "local" ? { config: local, assetBase: undefined } : undefined;
+  const kit: Kit = {
+    files, problem, setProblem,
+    addFiles: (list) => setFiles((old) => {
+      const next = new Map(old);
+      for (const f of Array.from(list)) next.set(f.name, { name: f.name, url: URL.createObjectURL(f) });
+      return next;
+    }),
+    setConfig: (changes) => {
+      const query = new URLSearchParams(currentQuery());
+      for (const [key, value] of Object.entries(changes)) { if (value === null) query.delete(key); else query.set(key, value); }
+      go(`?${query}`, "replace");
+    },
+  };
   // The mode is controlled by the query, so a link, a reload or the back button gives the same mode.
   const requested = nav.params.get("mode") as Mode | null;
   const mode: Mode = requested && MODES.includes(requested) ? requested : "system";
   const setMode = (next: Mode) => {
-    const query = new URLSearchParams(location.search);
+    const query = new URLSearchParams(currentQuery());
     if (next === "system") query.delete("mode"); else query.set("mode", next);
     go(`?${query}`, "replace");
   };
@@ -363,9 +531,11 @@ function App() {
   const icons = (window as unknown as { __CONSOLE_ICONS__?: IconSet }).__CONSOLE_ICONS__;
   return (
     <NavContext.Provider value={nav}>
-      <ConsoleRoot mode={mode} onModeChange={setMode} config={config} assetBase="/design/" icons={icons} className="ex-root">
-        <Screen key={screenKey} />
-      </ConsoleRoot>
+      <KitContext.Provider value={kit}>
+        <ConsoleRoot mode={mode} onModeChange={setMode} config={applied?.config} assetBase={applied?.assetBase} icons={icons} className="ex-root">
+          <Screen key={screenKey} />
+        </ConsoleRoot>
+      </KitContext.Provider>
     </NavContext.Provider>
   );
 }

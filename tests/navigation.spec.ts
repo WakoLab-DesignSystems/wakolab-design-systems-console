@@ -1,10 +1,12 @@
 // Screen navigation of the neutral example (issue #6): the header's Screen menu reaches the six screens,
 // marks the active one, and keeps the chosen mode and example configuration. Original code.
+// Issue #8: the menu also reaches the presentation page (Overview), listed first (standard DIRECTIONS §2);
+// every check below runs over the seven entries, and the keyboard exit at 320px over the seven links.
 import { expect, test, type Page } from "@playwright/test";
 import { axe, noOverflow, open } from "./helpers";
 
 const SCREENS = [
-  ["collection", "Collection", "Datasets"], ["detail", "Detail", "Coastal temperatures"], ["form", "Form", "Settings"],
+  ["overview", "Overview", "Console"], ["collection", "Collection", "Datasets"], ["detail", "Detail", "Coastal temperatures"], ["form", "Form", "Settings"],
   ["message", "Message", "This page doesn't exist"], ["states", "States", "States"], ["components", "Components", "Components"],
 ] as const;
 
@@ -102,8 +104,8 @@ test("keyboard: open, move, choose and close the menu; focus lands on the new he
   await page.keyboard.press("Enter");
   await expect(trigger(page)).toHaveAttribute("aria-expanded", "true");
   await page.keyboard.press("Tab");
-  await expect(menu(page).getByRole("link", { name: "Collection" })).toBeFocused();
-  for (let n = 0; n < 4; n++) await page.keyboard.press("Tab");
+  await expect(menu(page).getByRole("link", { name: "Overview" })).toBeFocused(); // first entry since #8
+  for (let n = 0; n < 5; n++) await page.keyboard.press("Tab");
   const states = menu(page).getByRole("link", { name: "States" });
   await expect(states).toBeFocused();
   const outline = await states.evaluate((el) => getComputedStyle(el).outlineStyle);
@@ -223,7 +225,7 @@ for (const mode of ["light", "dark"] as const) {
       await expect(root(page)).toHaveAttribute("data-mode", mode);
     });
 
-    test("Tab through the six links, then on to Appearance, Language and Sign in", async ({ page }) => {
+    test("Tab through the menu links (Overview and the six screens), then on to Appearance, Language and Sign in", async ({ page }) => {
       await trigger(page).focus();
       await page.keyboard.press("Enter");
       for (const [, label] of SCREENS) {
