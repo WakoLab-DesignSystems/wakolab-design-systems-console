@@ -7,6 +7,8 @@
  * Edited: `.wl-kbd` uses var(--wl-font-code) instead of the hard-coded "JetBrains Mono Variable"
  *   family (its default resolves to the same font); `.wl-console .wl-proposal` dropped from one
  *   selector list (product).
+ * Added: the search-hint reservation rule after `.wl-console .wl-topbar-search .wl-kbd` (issue #10;
+ *   with ConsoleHeader's measured --wl-search-hint-space), so search text no longer runs under the hint.
  * Selectors, keyframes and layers are scoped to the Console root by the build (scripts/build.mjs). */
 
 /* ───────── Shared parts ───────── */
@@ -78,6 +80,9 @@
 .wl-brand--prompt { font-family: var(--wl-font-display); font-size: 1rem; }
 .wl-console .wl-topbar-search { max-width: 560px; margin-left: auto; }
 .wl-console .wl-topbar-search .wl-kbd { position: absolute; right: 48px; top: 50%; transform: translateY(-50%); }
+/* The input reserves the hint (48px offset + its measured width, set by ConsoleHeader, + 8px gap); long text
+ * ends in an ellipsis before it instead of running under it (issue #10). */
+.wl-console .wl-topbar-search:has(> .wl-kbd) input[type="search"] { padding-right: calc(48px + var(--wl-search-hint-space, 1.5rem) + 8px); text-overflow: ellipsis; }
 .wl-console .wl-tools { margin-left: 0; }
 .wl-console-body { max-width: 1280px; margin: 0 auto; padding: 24px 16px 64px; display: grid; gap: 24px; }
 .wl-console .wl-rail { display: none; }

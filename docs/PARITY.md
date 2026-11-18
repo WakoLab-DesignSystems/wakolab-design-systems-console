@@ -7,6 +7,73 @@ Evidence for review of [#1](https://github.com/WakoLab-DesignSystems/wakolab-des
 > 2. It said both nonzero registration cells "vanish in the second launch". In fact **registration / light / 1440** gave **0** then **34** (baseline self-control 34) and **registration / dark / 1024** gave **44** then **0** (baseline self-control 44); candidate self-controls are 0.
 > It also described the component sheet as "every exported primitive in its states"; the actual coverage is listed under run 2 and run 3. Raw data are unchanged.
 
+## Run 4 — Devus, header search text and the "/" hint (issue #10), 2026-11-18
+
+**Deliberate difference, accepted by Orc for this change only** ([decision 6976557106](https://github.com/WakoLab-DesignSystems/wakolab-design-systems-console/pull/11#issuecomment-6976557106)). Console's `ConsoleHeader` now reserves the hint's measured width in the header's search input ([#10](https://github.com/WakoLab-DesignSystems/wakolab-design-systems-console/issues/10), [PR #11](https://github.com/WakoLab-DesignSystems/wakolab-design-systems-console/pull/11)), so search text may end earlier, with an ellipsis, to keep the shortcut legible.
+
+The acceptance covers **only the search text in the header's search field**: at 360px, the placeholder end at **x=249–276, y=82–93** of the prototype captures. The frontend's "…mary" runs under the hint there, while the candidate ends at "m…" before it.
+
+Everything else is unchanged:
+- existing strict results and every other nonzero cell stay reportable;
+- the run 2 corner exception keeps its scope;
+- no threshold or global tolerance is added;
+- the strict gate (§8.5) still does not pass.
+
+| | Revision |
+| --- | --- |
+| Source of the fix | `0cb4a5fd69ba114c1ec20d0dc846c1e02f6b5013` |
+| Generated kit | `97f2b29c1cebed940cacfffd9af009edf672425d` |
+| Reviewed PR HEAD | `9df70bec2c10ee44eac7216dca7c8ba602a3ddcc` |
+| Integrated control (`dev`) | `445bd063cb0dbaa5b73591ac91649a969e7beeeb` |
+| Frontend reference | `e492bec9ced8893d6940879aa8186ac75a48a272` |
+
+### Independent targeted check (Revex, [review 5955401295](https://github.com/WakoLab-DesignSystems/wakolab-design-systems-console/pull/11#pullrequestreview-5955401295))
+
+**Setup:**
+- screen and size: Collection, 360 × 900;
+- browser: Chromium 155.0.8059.79, driven by Playwright 1.56.1;
+- one launch, no second-launch control;
+- frontend exported into a separate scratch directory.
+- **Control equivalence:** the control checkout at `40ee520` was verified identical to `445bd06` in source, examples, package manifest and lockfile.
+
+| Comparison | Light | Dark |
+| --- | --- | --- |
+| Control vs frontend | 0 | 0 |
+| Candidate vs frontend | 144 | 140 |
+| Candidate vs control | 144 | 140 |
+
+**Location:** all differing pixels lie within x=249–276, y=82–93, in one cluster per mode. Full-page sizes are equal (360 × 1401).
+
+### Wider matrix (Devus, attributed separately)
+
+**Setup:**
+- the whole `scripts/parity.mjs` matrix (96 comparisons: 12 screens × 4 widths × 2 modes), run once for the candidate (source `0cb4a5f`) and once for the integrated control (`445bd06`);
+- same environment for both: Chromium 153.0.8010.12, driven by Playwright 1.56.1;
+- one launch each, without `--control`.
+- **Not committed:** the raw outputs, because the full pages contain the frontend's icon artwork. A [crop of Collection, light, 360px](https://github.com/WakoLab-DesignSystems/wakolab-design-systems-console/blob/95999337118a0a1605f5c86ce4ac5e9d84ca0cc1/parity-collection-light-360-baseline-candidate-diff.png) (baseline | candidate | difference) is on the evidence branch `claude/10-evidence-1024px`.
+
+**Cells that differ between control and candidate.** Each cell gives the differing pixels against the frontend, with the largest per-channel difference out of 255:
+
+| Screen at 360px | Light: control → candidate | Dark: control → candidate |
+| --- | --- | --- |
+| collection | 0 → 147 (≤176) | 0 → 146 (≤141) |
+| detail | 0 → 147 (≤176) | 0 → 146 (≤141) |
+| notFound | 0 → 147 (≤176) | 8 (≤1) → 154 (≤141) |
+| message | 0 → 147 (≤176) | 8 (≤1) → 154 (≤141) |
+| loading | 0 → 147 (≤176) | 22 (≤7) → 168 (≤141) |
+| unavailable | 0 → 147 (≤176) | 22 (≤7) → 168 (≤141) |
+| dialog | 0 → 147 (≤97) | 0 → 144 (≤56) |
+
+- **Search-field cells.** In every row the added pixels form one new cluster at x=249–276, y=82–93: 146–147 pixels, or 144 for dialog dark. The control's earlier pixels in notFound, message, loading and unavailable (dark) remain.
+- **Loading and unavailable, dark.** The new pixels touch a 5-pixel control cluster at x=275–276, y=92–95, so the tool reports one 151-pixel box at y=82–95, made of 146 new and 5 earlier pixels. Those 5 pixels belong to run 2's recorded cells and keep their run 2 status; they are not part of this acceptance.
+- **Other changes, away from the search field and outside this acceptance:**
+  - dialog light 1440: 0 → 12, two 6-pixel clusters at x=1049–1051 and x=1067–1069, y=21–23;
+  - registration light 1440: 0 → 34, eight clusters with a channel difference of 1;
+  - registration dark 1440: 52 → 37, one 15-pixel cluster absent in the candidate.
+
+  For **dialog light 1440** and **registration light 1440**, the correction note above records variation between two launches at 1440px (12 then 18, and 0 then 34). **Registration dark 1440** has no such record: run 2 documents its launch variation at **1024px** (44 then 0), and the corrected run 2 table gives **0** at 1440px. Its 52 → 37 here is a current Run 4 observation (control 52, candidate 37), and its cause is undetermined. All three cells stay reportable and are outside Orc's acceptance, which is limited to the search text at 360px.
+- **All other comparisons** are equal between control and candidate, including every fixture screen (form, components, confirm, registration except as listed, overlays) and every prototype screen at 768, 1024 and 1440px apart from dialog light 1440.
+
 ## Run 2 — Des, after review R4 (correction delta on #5)
 
 - **Code:** package built from the sources of `78a9db87133309dac2afe41127850b9f0e44fc90` (later commits change only the parity fixture's slot content, tests and documentation, not `src/` or `dist/`).
