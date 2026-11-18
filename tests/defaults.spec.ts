@@ -2,7 +2,7 @@
 import { test, expect } from "@playwright/test";
 import { axe, noOverflow, open } from "./helpers";
 
-const screens = ["collection", "detail", "form", "message", "states", "components"];
+const screens = ["overview", "collection", "detail", "form", "message", "states", "components"]; // overview: the presentation page (#8)
 for (const mode of ["light", "dark"])
   test(`${mode}: every example screen is axe A/AA clean and reflows from 320px`, async ({ page }) => {
     for (const screen of screens) {

@@ -32,6 +32,8 @@ export default defineConfig({
       { find: /^wakolab-design-systems-console\/console\.css$/, replacement: resolve(dist, "console.css") },
       { find: /^wakolab-design-systems-console$/, replacement: resolve(dist, "index.js") },
       { find: /^parity-sys$/, replacement: resolve(root, "parity/fixture/console-sys.tsx") },
+      // HTTP mode of the example; scripts/build-html.mjs maps this to neutral/env/offline.ts instead.
+      { find: /^console-example-env$/, replacement: resolve(root, "neutral/env/http.ts") },
     ],
   },
   server: { host: "127.0.0.1", port: 5190, strictPort: true, fs: { allow: [resolve(__dirname, "..")] } },
