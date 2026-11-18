@@ -7,8 +7,10 @@
  * (standard EXTRACTION_MATRIX §5.4, N3, N4).
  * Changes for standalone use: the app context, catalog view, i18n, routes and project data are
  * replaced by slots and props; the DOM structure, class names and order are unchanged. The
- * keyboard layer moved to useCollectionKeys (root/keyboard.ts); the composition binds it. */
-import { useRef, type ReactNode, type RefObject } from "react";
+ * keyboard layer moved to useCollectionKeys (root/keyboard.ts); the composition binds it.
+ * ConsoleHeader measures its search hint and exposes the width as --wl-search-hint-space, so the input
+ * reserves that space (console-parts.css); without it, text ran under the hint (issue #10). */
+import { useLayoutEffect, useRef, type ReactNode, type RefObject } from "react";
 import { SearchField } from "../components";
 import { Icon } from "../components/icons";
 import { MessageBlock } from "../parts/page";
@@ -24,13 +26,28 @@ export interface ShellSearch {
 export function ConsoleHeader({ logo, search, tools, searchRef }: {
   logo: ReactNode; search?: ShellSearch; tools?: ReactNode; searchRef?: RefObject<HTMLInputElement | null>;
 }) {
+  // The hint sits over the input's right side; its measured width (custom hint text, configured code font)
+  // becomes --wl-search-hint-space, which the input reserves so that no text runs under it.
+  const searchBox = useRef<HTMLDivElement>(null);
+  const hintRef = useRef<HTMLElement>(null);
+  const hint = search && search.hint !== null ? search.hint ?? "/" : null;
+  useLayoutEffect(() => {
+    const box = searchBox.current, element = hintRef.current;
+    if (!box || !element) return;
+    const update = () => box.style.setProperty("--wl-search-hint-space", `${Math.ceil(element.getBoundingClientRect().width)}px`);
+    update();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(update);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [hint]);
   return (
     <header className="wl-topbar">
       {logo}
       {search && (
-        <div className="wl-topbar-search">
+        <div ref={searchBox} className="wl-topbar-search">
           <SearchField inputRef={searchRef} label={search.label} placeholder={search.placeholder} clearLabel={search.clearLabel} value={search.value} onChange={search.onChange} />
-          {search.hint !== null && <kbd className="wl-kbd" aria-hidden="true">{search.hint ?? "/"}</kbd>}
+          {hint !== null && <kbd ref={hintRef} className="wl-kbd" aria-hidden="true">{hint}</kbd>}
         </div>
       )}
       {tools && <div className="wl-tools">{tools}</div>}
