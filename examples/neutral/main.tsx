@@ -55,6 +55,23 @@ const ITEMS = [
   { id: "long-title", name: "A deliberately long dataset title that wraps on narrow screens without hiding any word", summary: "A long summary to check wrapping and truncation in the dense rows.", cat: "science/climate", path: "Science › Climate", access: "Public data", editing: "Open to edits" },
 ];
 
+/** Example-local coordination for a Console Popover in the header (N-R1, PR #7). Console's Popover closes
+ *  on an outside pointer press and handles Escape only while focus is inside it; it does not close when
+ *  keyboard focus leaves it. This scope closes its open popover when focus moves to an element outside it,
+ *  by the popover's own trigger toggle, which does not move focus. So Tab, Shift+Tab or opening another
+ *  popover never leaves a stale panel over the next control. It reacts only to focus leaving this scope:
+ *  no page-wide key handler. A focus loss without a new target (window switch, pointer press) is left to
+ *  the Popover's own pointer handling. `display: contents` keeps the header layout unchanged. */
+function CloseOnFocusLeave({ children }: { children: React.ReactNode }) {
+  const scope = useRef<HTMLDivElement>(null);
+  const onBlur = (e: React.FocusEvent<HTMLDivElement>) => {
+    const next = e.relatedTarget as Node | null;
+    if (!next || scope.current?.contains(next)) return;
+    scope.current?.querySelector<HTMLButtonElement>('[data-wds-popover][data-open="true"] > button[aria-expanded="true"]')?.click();
+  };
+  return <div ref={scope} className="ex-popover-scope" onBlur={onBlur}>{children}</div>;
+}
+
 /** Header menu listing the six example screens as links; the active one carries aria-current="page".
  *  The trigger always shows "Screen:" and the active screen, at every width. */
 function ScreenMenu() {
@@ -91,8 +108,8 @@ function Header({ searchRef, query, setQuery }: { searchRef?: React.RefObject<HT
       searchRef={searchRef}
       search={{ label: "Search datasets", placeholder: "Dataset name or summary", clearLabel: "Clear search", value: query, onChange: setQuery }}
       tools={<>
-        <ScreenMenu />
-        <ModeMenu compact label="Appearance" modeLabel="Mode" labels={{ light: "Light", dark: "Dark", system: "System" }} />
+        <CloseOnFocusLeave><ScreenMenu /></CloseOnFocusLeave>
+        <CloseOnFocusLeave><ModeMenu compact label="Appearance" modeLabel="Mode" labels={{ light: "Light", dark: "Dark", system: "System" }} /></CloseOnFocusLeave>
         <ToolButton icon="globe" label="Language" value="English" compact valueLang="en" />
         <Button id="sign-in" className="wl-signin">Sign in</Button>
       </>}

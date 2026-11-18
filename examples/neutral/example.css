@@ -14,3 +14,4 @@ html, body { margin: 0; }
 .ex-menu-link { text-decoration: none; }
 .ex-menu-link[aria-current="page"] { background: var(--wl-surface-2); font-weight: 700; }
 .ex-menu-mark { display: inline-block; width: 1ch; }
+.ex-popover-scope { display: contents; } /* focus-leave scope for a header popover; no box of its own */

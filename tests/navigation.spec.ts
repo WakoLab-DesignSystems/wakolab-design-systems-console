@@ -188,3 +188,121 @@ for (const mode of ["light", "dark"] as const) {
     }
   });
 }
+
+// N-R1 (Revex, PR #7): leaving an open header popover with the keyboard must not leave it covering the
+// next controls. Each focused control is checked as actually usable: focused, outlined, entirely in
+// view, hit-testable at its centre, and not under any open popover panel.
+const openPanels = (page: Page) => page.locator('[data-wds-popover][data-open="true"]');
+const appearance = (page: Page) => page.getByRole("button", { name: /^Appearance/ });
+const language = (page: Page) => page.getByRole("button", { name: /^Language/ });
+const signIn = (page: Page) => page.locator("#sign-in");
+const search = (page: Page) => page.getByRole("searchbox", { name: "Search datasets" }); // just before Screen in tab order
+
+async function usable(page: Page, control: ReturnType<Page["locator"]>, name: string) {
+  await expect(control, `${name} focused`).toBeFocused();
+  await expect(control, `${name} entirely in view`).toBeInViewport({ ratio: 1 });
+  const report = await control.evaluate((el) => {
+    const box = el.getBoundingClientRect();
+    const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+    const style = getComputedStyle(el);
+    const covered = [...document.querySelectorAll('[data-wds-popover][data-open="true"] > [role="group"]')]
+      .filter((panel) => !panel.contains(el)).some((panel) => {
+        const p = panel.getBoundingClientRect();
+        return p.left < box.right && p.right > box.left && p.top < box.bottom && p.bottom > box.top;
+      });
+    return { hit: Boolean(hit && (hit === el || el.contains(hit))), outline: style.outlineStyle !== "none" && parseFloat(style.outlineWidth) > 0, covered };
+  });
+  expect(report, `${name} usable`).toEqual({ hit: true, outline: true, covered: false });
+}
+
+for (const mode of ["light", "dark"] as const) {
+  test.describe(`${mode}, 320 × 720: keyboard exit from the Screen menu (N-R1)`, () => {
+    test.beforeEach(async ({ page }) => {
+      await page.setViewportSize({ width: 320, height: 720 });
+      await open(page, `screen=components&mode=${mode}`);
+      await expect(root(page)).toHaveAttribute("data-mode", mode);
+    });
+
+    test("Tab through the six links, then on to Appearance, Language and Sign in", async ({ page }) => {
+      await trigger(page).focus();
+      await page.keyboard.press("Enter");
+      for (const [, label] of SCREENS) {
+        await page.keyboard.press("Tab");
+        await expect(menu(page).getByRole("link", { name: label, exact: true })).toBeFocused();
+      }
+      // Shift+Tab inside the menu keeps it open; Tab returns to the last link.
+      await page.keyboard.press("Shift+Tab");
+      await expect(menu(page).getByRole("link", { name: "States" })).toBeFocused();
+      await expect(openPanels(page)).toHaveCount(1);
+      await page.keyboard.press("Tab");
+      await page.keyboard.press("Tab"); // past the last destination
+      await expect(openPanels(page)).toHaveCount(0);
+      await expect(trigger(page)).toHaveAttribute("aria-expanded", "false");
+      await usable(page, appearance(page), "Appearance");
+      await page.keyboard.press("Tab");
+      await usable(page, language(page), "Language");
+      await page.keyboard.press("Tab");
+      await usable(page, signIn(page), "Sign in");
+      await page.keyboard.press("Escape"); // nothing is left open to dismiss; focus stays usable
+      await expect(openPanels(page)).toHaveCount(0);
+      await usable(page, signIn(page), "Sign in after Escape");
+    });
+
+    test("Shift+Tab out of the trigger closes the menu; Escape afterwards is harmless", async ({ page }) => {
+      await trigger(page).focus();
+      await page.keyboard.press("Enter");
+      await expect(openPanels(page)).toHaveCount(1);
+      await page.keyboard.press("Shift+Tab");
+      await expect(openPanels(page)).toHaveCount(0);
+      await usable(page, search(page), "Search field");
+      await page.keyboard.press("Escape");
+      await expect(openPanels(page)).toHaveCount(0);
+      await usable(page, search(page), "Search field after Escape");
+    });
+
+    test("Escape from a link inside the menu still returns focus to the trigger", async ({ page }) => {
+      await trigger(page).focus();
+      await page.keyboard.press("Enter");
+      await page.keyboard.press("Tab");
+      await page.keyboard.press("Tab");
+      await page.keyboard.press("Escape");
+      await expect(openPanels(page)).toHaveCount(0);
+      await usable(page, trigger(page), "Screen trigger");
+    });
+
+    test("opening Appearance by keyboard closes Screen; Escape returns to Appearance", async ({ page }) => {
+      await trigger(page).focus();
+      await page.keyboard.press("Enter");
+      for (let n = 0; n < SCREENS.length + 1; n++) await page.keyboard.press("Tab");
+      await usable(page, appearance(page), "Appearance");
+      await page.keyboard.press("Enter");
+      await expect(openPanels(page)).toHaveCount(1);
+      await expect(appearance(page)).toHaveAttribute("aria-expanded", "true");
+      await expect(trigger(page)).toHaveAttribute("aria-expanded", "false");
+      await page.keyboard.press("Escape");
+      await expect(openPanels(page)).toHaveCount(0);
+      await usable(page, appearance(page), "Appearance after Escape");
+    });
+
+    test("opening Appearance by pointer closes Screen; Escape returns to Appearance", async ({ page }) => {
+      await trigger(page).click();
+      await expect(openPanels(page)).toHaveCount(1);
+      await appearance(page).click();
+      await expect(openPanels(page)).toHaveCount(1);
+      await expect(appearance(page)).toHaveAttribute("aria-expanded", "true");
+      await expect(trigger(page)).toHaveAttribute("aria-expanded", "false");
+      await page.keyboard.press("Escape");
+      await expect(openPanels(page)).toHaveCount(0);
+      await usable(page, appearance(page), "Appearance after Escape");
+    });
+
+    test("Shift+Tab from an open Appearance back to Screen closes Appearance", async ({ page }) => {
+      await appearance(page).focus();
+      await page.keyboard.press("Enter");
+      await expect(appearance(page)).toHaveAttribute("aria-expanded", "true");
+      await page.keyboard.press("Shift+Tab");
+      await expect(openPanels(page)).toHaveCount(0);
+      await usable(page, trigger(page), "Screen trigger");
+    });
+  });
+}
