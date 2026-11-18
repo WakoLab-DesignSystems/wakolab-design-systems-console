@@ -71,7 +71,7 @@ Everything else is unchanged:
   - registration light 1440: 0 → 34, eight clusters with a channel difference of 1;
   - registration dark 1440: 52 → 37, one 15-pixel cluster absent in the candidate.
 
-  These are the cells that the correction note above records as varying between launches. They stay reportable.
+  For **dialog light 1440** and **registration light 1440**, the correction note above records variation between two launches at 1440px (12 then 18, and 0 then 34). **Registration dark 1440** has no such record: run 2 documents its launch variation at **1024px** (44 then 0), and the corrected run 2 table gives **0** at 1440px. Its 52 → 37 here is a current Run 4 observation (control 52, candidate 37), and its cause is undetermined. All three cells stay reportable and are outside Orc's acceptance, which is limited to the search text at 360px.
 - **All other comparisons** are equal between control and candidate, including every fixture screen (form, components, confirm, registration except as listed, overlays) and every prototype screen at 768, 1024 and 1440px apart from dialog light 1440.
 
 ## Run 2 — Des, after review R4 (correction delta on #5)
