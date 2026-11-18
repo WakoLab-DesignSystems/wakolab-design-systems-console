@@ -8,3 +8,5 @@ Header crops of the neutral example at 1024 CSS px, light and dark, device scale
 
 `parity-collection-light-360-baseline-candidate-diff.png`: parity crop (frontend e492bec | candidate | difference).
 This branch only holds review evidence; it is not part of dev and can be deleted after review.
+
+Rendered comparison page: [COMPARISON.md](COMPARISON.md).
